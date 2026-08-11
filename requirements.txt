@@ -1,0 +1,9 @@
+fastapi>=0.110
+uvicorn>=0.29
+pydantic>=2.6
+python-dateutil>=2.9
+httpx>=0.27  # only needed for running tests / TestClient
+google-api-python-client>=2.100
+google-auth-httplib2>=0.2
+google-auth-oauthlib>=1.2
+plyer>=2.1

@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Mail Expert AI",
+  "version": "1.0",
+  "description": "Shows your classified inbox (High/Medium/Low priority) from your local Mail Expert AI server.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Mail Expert AI"
+  },
+  "permissions": [],
+  "host_permissions": [
+    "http://127.0.0.1:8000/*"
+  ],
+  "icons": {
+    "48": "icon48.png"
+  }
+}

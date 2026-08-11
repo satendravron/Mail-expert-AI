@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Mail Expert AI — Extension</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body {
+      width: 360px;
+      max-height: 520px;
+      overflow-y: auto;
+      background: #0b0f19;
+      color: #f8fafc;
+      padding: 14px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .title-group { display: flex; align-items: center; gap: 8px; }
+    .logo { font-size: 18px; }
+    .brand-title { font-size: 15px; font-weight: 700; color: #f8fafc; }
+    .dashboard-link {
+      font-size: 11px;
+      font-weight: 600;
+      color: #38bdf8;
+      text-decoration: none;
+      background: rgba(56, 189, 248, 0.1);
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+    .dashboard-link:hover { background: rgba(56, 189, 248, 0.2); }
+    
+    .card {
+      background: rgba(21, 29, 48, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-left: 4px solid #10b981;
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+    }
+    .card.high { border-left-color: #ef4444; }
+    .card.medium { border-left-color: #f59e0b; }
+    .card.low { border-left-color: #10b981; }
+
+    .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 4px; }
+    .tier {
+      font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 12px; color: #fff; text-transform: uppercase;
+    }
+    .tier.high { background: #ef4444; }
+    .tier.medium { background: #f59e0b; }
+    .tier.low { background: #10b981; }
+
+    .tag { font-size: 10px; background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; color: #cbd5e1; }
+    .acc-tag { font-size: 10px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+    
+    .subject { font-size: 13px; font-weight: 700; color: #f8fafc; margin-bottom: 3px; line-height: 1.3; }
+    .sender { font-size: 11px; color: #94a3b8; margin-bottom: 6px; }
+    .summary { font-size: 11px; color: #e2e8f0; background: rgba(56, 189, 248, 0.08); padding: 6px 8px; border-radius: 6px; margin-top: 4px; line-height: 1.4; }
+    .deadline { font-size: 11px; color: #fbbf24; font-weight: 600; margin-top: 4px; }
+
+    .empty { color: #94a3b8; font-size: 12px; text-align: center; padding: 24px 0; }
+    .error { color: #ef4444; font-size: 12px; line-height: 1.5; padding: 12px; background: rgba(239, 68, 68, 0.1); border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title-group">
+      <span class="logo">📬</span>
+      <span class="brand-title">Mail Expert AI</span>
+    </div>
+    <a href="http://127.0.0.1:8000/" target="_blank" class="dashboard-link">Open Dashboard ↗</a>
+  </div>
+  <div id="content">Loading priority emails...</div>
+  <script src="popup.js"></script>
+</body>
+</html>
