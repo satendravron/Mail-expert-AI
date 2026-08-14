@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Satendra Gupta — AI/ML Engineer & Full Stack Developer</title>
+<meta name="description" content="Satendra Gupta is an AI/ML Engineer and Full Stack Developer architecting low-latency computer vision pipelines, voice AI streams, and production GenAI infrastructure." />
+<meta name="theme-color" content="#0a0a0a" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- Open Graph / Social Media Previews -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://satendravron.github.io/" />
+<meta property="og:title" content="Satendra Gupta — AI/ML Engineer &amp; Full Stack Developer" />
+<meta property="og:description" content="AI/ML Engineer &amp; Full Stack Developer building production-grade GenAI infrastructure, real-time computer vision pipelines, and low-latency Web APIs." />
+<meta property="og:image" content="https://satendravron.github.io/og-preview.png" />
+
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:url" content="https://satendravron.github.io/" />
+<meta property="twitter:title" content="Satendra Gupta — AI/ML Engineer &amp; Full Stack Developer" />
+<meta property="twitter:description" content="AI/ML Engineer &amp; Full Stack Developer building production-grade GenAI infrastructure, real-time computer vision pipelines, and low-latency Web APIs." />
+<meta property="twitter:image" content="https://satendravron.github.io/og-preview.png" />
+
+<style>
+  :root {
+    --background: #ffffff;
+    --foreground: #111111;
+    --ink: #0a0a0a;
+    --muted: #8d8d8d;
+    --subtle: #b6b6b6;
+    --line: #e6e5e2;
+    --line-soft: #f1f0ee;
+    --surface: #f1f0ee;
+    --surface-2: #e3e2df;
+    --accent: #b15f2c;
+    --accent-from: #cf8047;
+    --accent-to: #97501f;
+    --hero-from: #ecebe9;
+    --hero-to: #c9c9c9;
+    --radius-pill: 9999px;
+    --radius-card: 2rem;
+    --radius-card-sm: 1.25rem;
+    --radius-control: 0.875rem;
+    --text-watermark: 13rem;
+    --container-shell: 88rem;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+  body { background: var(--background); color: var(--foreground); font-family: 'Onest', sans-serif; overflow-x: hidden; }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+  ul { list-style: none; }
+  img, svg { display: block; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  
+  /* Adaptive rem-based grid */
+  @media (max-width: 1920px) { html { font-size: 0.833333vw; } }
+  @media (max-width: 1440px) { html { font-size: 1.111111vw; } }
+  @media (max-width: 1024px) { html { font-size: 1.5625vw; } }
+  @media (max-width: 640px)  { html { font-size: 4.444444vw; } }
+  
+  .shell { max-width: var(--container-shell); margin-inline: auto; padding-inline: 2rem; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  
+  /* Shared spring & reveal animations */
+  .reveal-line { overflow: hidden; display: block; }
+  .reveal-line-inner { display: block; transform: translateY(100%); opacity: 0; transition: transform 0.9s cubic-bezier(0.215, 0.61, 0.355, 1), opacity 0.9s cubic-bezier(0.215, 0.61, 0.355, 1); }
+  .reveal-line-inner.visible { transform: translateY(0); opacity: 1; }
+  
+  .reveal-fade { opacity: 0; transform: translateY(24px); transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+  .reveal-fade.visible { opacity: 1; transform: translateY(0); }
+
+  /* PageLoader */
+  #pageLoader {
+    position: fixed; inset: 0; z-index: 120;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2rem;
+    background: var(--ink); color: #ffffff; border-radius: 0 0 2rem 2rem;
+    transition: transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  #pageLoader.exit { transform: translateY(-100%); }
+  .loader-brand { display: flex; align-items: center; gap: 0.75rem; font-weight: 600; font-size: 1.875rem; }
+  .loader-spark { width: 2.25rem; height: 2.25rem; fill: var(--accent-from); }
+  .loader-sub { max-width: 28ch; font-size: 0.875rem; color: rgba(255,255,255,0.55); text-align: center; line-height: 1.5; }
+  .loader-track { width: min(22rem, 72vw); height: 1px; background: rgba(255,255,255,0.15); position: relative; margin-top: 1rem; }
+  .loader-fill { height: 100%; background: var(--accent-from); width: 0%; transition: width 0.1s ease-out; }
+  .loader-meta { width: min(22rem, 72vw); display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.45); }
+
+  /* Header */
+  header {
+    position: fixed; inset-inline: 0; top: 0; z-index: 50;
+    background: rgba(255,255,255,0.65); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(230,229,226,0.8);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  header .shell { display: flex; align-items: center; justify-content: space-between; height: 4.25rem; }
+  .brand-logo { display: flex; align-items: center; gap: 0.5rem; font-size: 1.125rem; font-weight: 600; letter-spacing: -0.01em; transition: transform 0.25s ease; }
+  .brand-logo:hover { transform: scale(1.04); }
+  .brand-mark { width: 1.5rem; height: 1.5rem; fill: var(--accent); }
+  
+  nav.primary-nav { display: none; gap: 2rem; font-size: 0.875rem; font-weight: 500; color: rgba(17,17,17,0.7); }
+  @media(min-width: 900px) { nav.primary-nav { display: flex; } }
+  nav.primary-nav button:hover { color: var(--foreground); transform: translateY(-2px); transition: all 0.2s ease; }
+
+  .header-actions { display: flex; align-items: center; gap: 1rem; }
+  .clock-chip {
+    display: none; align-items: center; gap: 0.75rem; border: 1px solid rgba(230,229,226,0.8);
+    background: rgba(255,255,255,0.5); backdrop-filter: blur(4px); border-radius: var(--radius-control);
+    padding: 0.5rem 0.875rem; font-size: 0.75rem; color: rgba(17,17,17,0.7);
+  }
+  @media(min-width: 768px) { .clock-chip { display: flex; } }
+  
+  .btn-pill {
+    display: inline-flex; align-items: center; gap: 0.75rem; border-radius: var(--radius-pill);
+    font-size: 0.875rem; font-weight: 500; transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.25s, border-color 0.25s;
+    cursor: pointer;
+  }
+  .btn-pill:hover { transform: scale(1.04); }
+  .btn-dark { background: var(--ink); color: #ffffff; padding: 0.75rem 1.5rem; }
+  .btn-dark:hover { background: #1a1a1a; }
+  .btn-light { background: var(--surface); color: var(--foreground); padding: 0.75rem 1.5rem; }
+  .btn-outline { border: 1px solid var(--line); background: transparent; color: var(--foreground); padding: 0.75rem 1.5rem; }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  
+  .btn-arrow-badge {
+    width: 2.25rem; height: 2.25rem; display: grid; place-items: center; border-radius: 9999px; font-size: 1rem;
+  }
+  .btn-dark .btn-arrow-badge { background: #ffffff; color: var(--ink); }
+  .btn-light .btn-arrow-badge, .btn-outline .btn-arrow-badge { background: var(--ink); color: #ffffff; }
+
+  /* Hero */
+  #home { position: relative; isolation: isolate; overflow: hidden; border-radius: 0 0 2rem 2rem; background: var(--hero-to); min-height: 100vh; }
+  #liquidCanvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+  .hero-vignette { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(to bottom, rgba(255,255,255,0.45), transparent 60%, rgba(255,255,255,0.3)); }
+  
+  .hero-watermark {
+    position: absolute; inset-inline: 0; bottom: 6rem; z-index: 1; pointer-events: none;
+    text-align: center; user-select: none; font-weight: 700; line-height: 1; font-size: var(--text-watermark);
+    color: rgba(255,255,255,0.35); letter-spacing: -0.04em;
+  }
+  
+  .hero-content {
+    position: relative; z-index: 20; display: flex; flex-direction: column; gap: 2rem;
+    padding: 8rem 2rem 5rem;
+  }
+  @media(min-width: 1024px) {
+    .hero-content { display: grid; min-height: 100vh; grid-template-columns: repeat(12, 1fr); gap: 2.5rem; padding: 10rem 2rem 6rem; align-items: center; }
+    .hero-left { grid-column: span 7; }
+    .hero-right { grid-column: span 5; display: flex; flex-direction: column; align-items: flex-end; gap: 2rem; }
+  }
+
+  .eyebrow-tag {
+    display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; font-weight: 500;
+    color: rgba(17,17,17,0.75); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 1rem;
+  }
+  .eyebrow-tag::before { content: ""; width: 0.375rem; height: 0.375rem; border-radius: 9999px; background: var(--accent); }
+
+  .hero-h1 { font-size: 3.5rem; font-weight: 600; line-height: 1.02; letter-spacing: -0.03em; max-width: 18ch; color: var(--foreground); }
+  .rating-row { display: flex; align-items: center; gap: 0.75rem; margin-top: 1.5rem; }
+  .star-group { color: var(--accent); display: flex; gap: 2px; }
+
+  /* Hero Carousel Card */
+  .hero-card {
+    width: 100%; max-width: 24rem; border-radius: var(--radius-card-sm); background: rgba(255,255,255,0.75);
+    padding: 0.6rem; box-shadow: 0 20px 40px -15px rgba(0,0,0,0.08); backdrop-filter: blur(16px);
+    border: 1px solid rgba(230,229,226,0.8);
+  }
+  .hero-card-inner { display: flex; gap: 0.6rem; cursor: pointer; border-radius: 0.875rem; }
+  .hero-card-tile { aspect-ratio: 1; width: 6rem; display: grid; place-items: center; border-radius: 0.875rem; background: var(--ink); }
+  .hero-card-panel { flex: 1; border-radius: 0.875rem; background: rgba(241,240,238,0.75); padding: 0.75rem; display: flex; flex-direction: column; justify-content: space-between; }
+
+  /* Partners list */
+  .partners-wrap { width: 100%; max-width: 24rem; text-align: left; }
+  @media(min-width: 1024px) { .partners-wrap { text-align: right; } }
+  .partners-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-top: 0.5rem; }
+  .partner-chip { display: flex; align-items: center; gap: 0.375rem; font-size: 0.75rem; color: rgba(17,17,17,0.7); }
+
+  /* Status Bar */
+  .hero-status-bar {
+    position: relative; z-index: 20; display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px solid rgba(17,17,17,0.1); padding: 1.25rem 2rem; font-size: 0.75rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.05em; color: rgba(17,17,17,0.6);
+  }
+
+  /* About Section */
+  #about { background: #ffffff; padding: 7rem 0; }
+  .about-grid { display: grid; grid-template-columns: 1fr; gap: 4rem; align-items: center; }
+  @media(min-width: 940px) { .about-grid { grid-template-columns: 0.9fr 1.1fr; } }
+  
+  .about-globe-block { position: relative; min-height: 18rem; display: flex; flex-direction: column; justify-content: space-between; }
+  .globe-bg-svg { position: absolute; left: -1.5rem; top: 50%; transform: translateY(-50%); width: 18rem; height: 18rem; color: rgba(17,17,17,0.06); pointer-events: none; }
+  .about-statement { font-size: 1.875rem; font-weight: 500; line-height: 1.35; letter-spacing: -0.015em; color: var(--foreground); }
+  .about-muted { color: var(--muted); }
+
+  /* CreateBand ("We / Architect / → / Scale") */
+  .create-band { display: flex; flex-direction: column; gap: 1rem; padding: 3rem 0; }
+  @media(min-width: 640px) { .create-band { flex-direction: row; } }
+  .band-tile {
+    flex: 1; display: grid; place-items: center; height: 8rem; border-radius: 9999px; font-size: 2.25rem; font-weight: 500;
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); cursor: pointer;
+  }
+  .band-tile:hover { transform: scale(1.03); }
+  .tile-light { background: var(--surface); color: var(--foreground); }
+  .tile-accent { background: linear-gradient(135deg, var(--accent-from), var(--accent-to)); color: #ffffff; }
+  .tile-dark { background: var(--ink); color: #ffffff; }
+  .tile-ghost { background: rgba(241,240,238,0.6); color: rgba(17,17,17,0.35); }
+
+  /* Portfolio (#works) */
+  #works { background: #ffffff; padding: 6rem 0; }
+  .portfolio-grid { display: grid; grid-template-columns: 1fr; gap: 1.75rem; margin-top: 3.5rem; }
+  @media(min-width: 768px) { .portfolio-grid { grid-template-columns: repeat(2, 1fr); } }
+  
+  .work-card {
+    position: relative; min-height: 26rem; overflow: hidden; border-radius: var(--radius-card);
+    background: var(--ink); padding: 2rem; color: #ffffff; box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s;
+    border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .work-card:hover { transform: translateY(-8px) scale(1.012); border-color: rgba(207,128,71,0.4); }
+  
+  .work-card-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.45); }
+  .work-card-badge { width: 2.75rem; height: 2.75rem; display: grid; place-items: center; border-radius: 9999px; background: rgba(255,255,255,0.1); color: #ffffff; transition: transform 0.3s ease; }
+  .work-card:hover .work-card-badge { transform: rotate(45deg) scale(1.08); background: var(--accent-from); }
+  
+  .work-card-watermark { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; opacity: 0.06; }
+
+  .tag-pill { display: inline-flex; border: 1px solid rgba(255,255,255,0.25); color: #ffffff; border-radius: 9999px; padding: 0.4rem 0.875rem; font-size: 0.75rem; }
+
+  /* Services (#services) */
+  #services { background: #ffffff; padding: 6rem 0; }
+  .services-list { margin-top: 3.5rem; display: flex; flex-direction: column; }
+  .service-row {
+    display: flex; align-items: center; gap: 1.5rem; border-top: 1px solid var(--line);
+    padding: 2.25rem 1.5rem; border-radius: 1.25rem; transition: background 0.35s ease, padding 0.35s ease;
+    cursor: pointer;
+  }
+  .service-row:hover { background: var(--surface); padding-inline: 2rem 1.25rem; }
+  .service-idx { width: 2.5rem; font-size: 0.875rem; font-weight: 500; color: rgba(17,17,17,0.4); }
+  .service-title { flex: 1; font-size: 2.25rem; font-weight: 500; letter-spacing: -0.02em; }
+  .service-desc { display: none; max-width: 22rem; font-size: 0.875rem; color: rgba(17,17,17,0.55); }
+  @media(min-width: 1024px) { .service-desc { display: block; } }
+  .service-arrow { width: 3rem; height: 3rem; display: grid; place-items: center; border-radius: 9999px; background: var(--ink); color: #ffffff; transition: transform 0.3s ease; }
+  .service-row:hover .service-arrow { transform: translateX(5px); background: var(--accent-from); }
+
+  /* Stats (#stats) */
+  #stats { padding: 4rem 0 6rem; }
+  .stats-panel { border-radius: 2rem; background: var(--ink); padding: 4rem 3rem; color: #ffffff; }
+  .stats-grid { margin-top: 3.5rem; display: grid; grid-template-columns: repeat(2, 1fr); gap: 3rem; }
+  @media(min-width: 1024px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
+  .stat-num { font-size: 4.5rem; font-weight: 600; letter-spacing: -0.03em; line-height: 1; color: var(--accent-from); }
+  .stat-label { margin-top: 0.75rem; font-size: 0.875rem; color: rgba(255,255,255,0.55); }
+
+  /* Footer */
+  footer { position: relative; overflow: hidden; border-radius: 2rem 2rem 0 0; background: var(--ink); color: #ffffff; }
+  .footer-content { position: relative; z-index: 10; padding: 6rem 2rem 3rem; }
+  .footer-cta-row { display: flex; flex-direction: column; gap: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4rem; }
+  @media(min-width: 1024px) { .footer-cta-row { flex-direction: row; align-items: flex-end; justify-content: space-between; } }
+  
+  .footer-cols { display: grid; grid-template-columns: 1fr; gap: 3rem; padding-block: 4rem; }
+  @media(min-width: 768px) { .footer-cols { grid-template-columns: repeat(4, 1fr); } }
+  .footer-col-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.4); margin-bottom: 1.25rem; }
+  .footer-link-list { display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.875rem; color: rgba(255,255,255,0.7); }
+  .footer-link-list a:hover { color: var(--accent-from); transform: translateX(4px); transition: all 0.2s ease; }
+
+  .footer-watermark {
+    position: absolute; inset-inline: 0; bottom: -1.5rem; z-index: 0; text-align: center; pointer-events: none;
+    user-select: none; font-weight: 700; line-height: 1; font-size: var(--text-watermark); color: rgba(255,255,255,0.04);
+  }
+
+  /* NavMenu Overlay */
+  #navMenu {
+    position: fixed; inset: 0; z-index: 115; display: none; flex-direction: column;
+    background: var(--ink); color: #ffffff; opacity: 0; transition: opacity 0.35s ease;
+  }
+  #navMenu.active { display: flex; opacity: 1; }
+  .nav-menu-header { display: flex; align-items: center; justify-content: space-between; padding: 2rem; }
+  .nav-menu-list { flex: 1; display: flex; flex-direction: column; justify-content: center; padding-inline: 2rem; }
+  .nav-menu-item { font-size: 3.75rem; font-weight: 600; letter-spacing: -0.02em; padding-block: 0.5rem; color: rgba(255,255,255,0.65); transition: color 0.3s; cursor: pointer; }
+  .nav-menu-item:hover { color: var(--accent-from); }
+
+  /* RequestModal Overlay */
+  #requestModal {
+    position: fixed; inset: 0; z-index: 110; display: none; place-items: center; padding: 1rem;
+    background: rgba(17,17,17,0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  }
+  #requestModal.active { display: grid; }
+  .modal-card {
+    position: relative; width: 100%; max-width: 32rem; overflow: hidden; border-radius: var(--radius-card);
+    background: #ffffff; padding: 2rem; box-shadow: 0 30px 60px rgba(0,0,0,0.3); border: 1px solid var(--line);
+  }
+  .form-control { width: 100%; border: 1px solid var(--line); background: rgba(241,240,238,0.5); border-radius: var(--radius-control); padding: 0.75rem 1rem; font-size: 0.875rem; outline: none; transition: border 0.2s; }
+  .form-control:focus { border-color: var(--accent); background: #ffffff; }
+</style>
+</head>
+<body>
+
+<!-- Skip Link -->
+<a href="#main" class="sr-only focus:not-sr-only">Skip to content</a>
+
+<!-- PageLoader -->
+<div id="pageLoader">
+  <div class="loader-brand">
+    <svg class="loader-spark" viewBox="0 0 48 48"><path d="M24 2c2.2 13.8 7.9 19.6 22 22-14.1 2.4-19.8 8.2-22 22-2.2-13.8-7.9-19.6-22-22 14.1-2.4 19.8-8.2 22-22Z"/></svg>
+    Satendra Gupta
+  </div>
+  <p class="loader-sub">AI/ML Engineer & Full Stack Developer — Bold ideas, shipped with quiet precision.</p>
+  <div class="loader-track"><div id="loaderFill" class="loader-fill"></div></div>
+  <div class="loader-meta">
+    <span>Loading Infrastructure</span>
+    <span id="loaderCount" class="mono">000</span>
+  </div>
+</div>
+
+<!-- Header -->
+<header id="header">
+  <div class="shell">
+    <a href="#home" class="brand-logo">
+      <svg class="brand-mark" viewBox="0 0 48 48"><path d="M24 2c2.2 13.8 7.9 19.6 22 22-14.1 2.4-19.8 8.2-22 22-2.2-13.8-7.9-19.6-22-22 14.1-2.4 19.8-8.2 22-22Z"/></svg>
+      Satendra Gupta
+    </a>
+    
+    <nav class="primary-nav">
+      <button onclick="scrollToId('home')">Home</button>
+      <button onclick="scrollToId('about')">About</button>
+      <button onclick="scrollToId('works')">Work</button>
+      <button onclick="scrollToId('services')">Services</button>
+      <button onclick="scrollToId('education')">Education</button>
+      <button onclick="openModal()">Contact</button>
+    </nav>
+
+    <div class="header-actions">
+      <div class="clock-chip">
+        <span style="color:rgba(17,17,17,0.45)">India IST</span>
+        <span id="liveTime" class="mono" style="font-weight:600; color:#111">9:41am</span>
+        <span style="color:rgba(17,17,17,0.3)">•</span>
+        <span id="liveDate" style="font-weight:500">14 Aug, 2026</span>
+      </div>
+      
+      <button class="btn-pill btn-outline" style="padding: 0.5rem 0.875rem; font-size:0.75rem;" onclick="toggleAccentTheme()">🎨 Theme</button>
+      <button class="btn-pill btn-outline" style="padding: 0.5rem 1rem; font-size:0.75rem;" onclick="openNavMenu()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        Menu
+      </button>
+      <button class="btn-pill btn-dark" style="padding: 0.5rem 1.25rem;" onclick="openModal()">Let's Talk</button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- HERO SECTION -->
+  <section id="home">
+    <canvas id="liquidCanvas"></canvas>
+    <div class="hero-vignette"></div>
+    <div class="hero-watermark">SATENDRA</div>
+
+    <div class="shell hero-content">
+      <div class="hero-left">
+        <div class="eyebrow-tag">AI/ML ENGINEER & FULL STACK DEVELOPER</div>
+        <h1 class="hero-headline hero-h1">
+          <span class="reveal-line"><span class="reveal-line-inner">Building AI models,</span></span>
+          <span class="reveal-line"><span class="reveal-line-inner">&amp; Full-Stack systems</span></span>
+          <span class="reveal-line"><span class="reveal-line-inner" style="color: var(--accent-from)">with quiet precision.</span></span>
+        </h1>
+        <p style="margin-top: 1.5rem; max-width: 52ch; font-size: 1.125rem; line-height: 1.65; color: rgba(17,17,17,0.75);">
+          I bridge deep learning research with robust, scalable full-stack applications — low-latency computer vision pipelines, voice AI streams, and production GenAI infrastructure.
+        </p>
+
+        <div class="rating-row">
+          <div class="star-group">★ ★ ★ ★ ★</div>
+          <span style="font-size: 0.875rem; font-weight: 500; color: rgba(17,17,17,0.7);">0 Dropped Frames · 35% Latency Reduction</span>
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+          <button class="btn-pill btn-dark" onclick="openModal()">
+            Let's Talk
+            <span class="btn-arrow-badge">↗</span>
+          </button>
+          <button class="btn-pill btn-outline" onclick="scrollToId('works')">View Selected Work</button>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <!-- Hero Interactive Card -->
+        <div class="hero-card">
+          <div class="hero-card-inner" onclick="nextHeroSlide()">
+            <div class="hero-card-tile">
+              <svg width="32" height="32" viewBox="0 0 48 48" fill="#cf8047"><path d="M24 2c2.2 13.8 7.9 19.6 22 22-14.1 2.4-19.8 8.2-22 22-2.2-13.8-7.9-19.6-22-22 14.1-2.4 19.8-8.2 22-22Z"/></svg>
+            </div>
+            <div class="hero-card-panel">
+              <div>
+                <span id="heroCardCaption" style="font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(17,17,17,0.45);">COMPUTER VISION</span>
+                <h4 id="heroCardTitle" style="font-size: 0.95rem; font-weight: 600; margin-top: 0.25rem; line-height: 1.3;">BowlForm AI: Real-Time Kinetic Tracking</h4>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem;">
+                <span style="font-size: 0.75rem; font-weight: 600; color: var(--accent-from);">Tap to Cycle ➔</span>
+                <span style="font-size: 0.75rem; color: rgba(17,17,17,0.4);">01/03</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="partners-wrap">
+          <span style="font-size: 0.75rem; font-weight: 500; color: rgba(17,17,17,0.5);">TECHNICAL CORE</span>
+          <div class="partners-grid">
+            <div class="partner-chip">● PyTorch</div>
+            <div class="partner-chip">● TensorFlow</div>
+            <div class="partner-chip">● FastAPI</div>
+            <div class="partner-chip">● Docker</div>
+            <div class="partner-chip">● Vue.js</div>
+            <div class="partner-chip">● React</div>
+            <div class="partner-chip">● Kotlin</div>
+            <div class="partner-chip">● PostgreSQL</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="shell hero-status-bar">
+      <span>AI/ML & Full Stack Engineering</span>
+      <span>VIT Bhopal University (CGPA: 7.51)</span>
+      <span>Scroll to explore ↓</span>
+    </div>
+  </section>
+
+  <!-- ABOUT SECTION (Terminal / Tech-Forward Layout) -->
+  <section id="about" style="background:#ffffff; padding:6rem 0;">
+    <div class="shell">
+      <div class="terminal-about-card" style="background:#0a0a0a; border:1px solid rgba(45,212,191,0.25); border-radius:var(--radius-card); padding:2.5rem; color:#ffffff; position:relative; box-shadow:0 30px 60px rgba(0,0,0,0.5); overflow:hidden;">
+        
+        <!-- Terminal Window Header -->
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:1.25rem; margin-bottom:2rem;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="width:10px; height:10px; border-radius:50%; background:#ff5f57; display:inline-block;"></span>
+            <span style="width:10px; height:10px; border-radius:50%; background:#febc2e; display:inline-block;"></span>
+            <span style="width:10px; height:10px; border-radius:50%; background:#28c840; display:inline-block;"></span>
+            <span class="mono" style="font-size:0.75rem; color:rgba(255,255,255,0.45); margin-left:8px;">bash — system.init("Satendra Gupta")</span>
+          </div>
+          <div class="mono" style="font-size:0.75rem; color:var(--accent); display:flex; align-items:center; gap:6px;">
+            <span style="width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent);"></span>
+            SYSTEM_ONLINE
+          </div>
+        </div>
+
+        <!-- Real-Time Typing Terminal Headline -->
+        <div style="margin-bottom:2rem;">
+          <h2 style="font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight:700; letter-spacing:-0.02em; color:#ffffff; font-family:'JetBrains Mono', monospace;">
+            <span style="color:var(--accent);">></span> <span id="terminalHeaderTyping"></span><span id="terminalCursor" style="display:inline-block; width:10px; height:1.2em; background:var(--accent); vertical-align:-3px; animation:blink 1s step-end infinite;"></span>
+          </h2>
+        </div>
+
+        <!-- The 3 Scannable Blocks (Staggered Fade-In on Scroll) -->
+        <div class="terminal-blocks-wrap" style="display:flex; flex-direction:column; gap:1.25rem;">
+          
+          <!-- Block 1: The Engineer -->
+          <div class="about-block reveal-stagger" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-left:4px solid var(--accent); padding:1.5rem; border-radius:0.875rem; transition:all 0.3s ease;">
+            <h4 style="font-size:1.125rem; font-weight:600; color:#ffffff; margin-bottom:0.5rem; font-family:'JetBrains Mono', monospace;">
+              <span style="color:var(--accent);">></span> <strong style="color:#ffffff;">The Engineer:</strong>
+            </h4>
+            <p style="font-size:0.95rem; color:rgba(255,255,255,0.75); line-height:1.7;">
+              Final-year AI &amp; ML student at VIT Bhopal. I bridge the gap between complex research and deployment. I don't just train models; I use rigorous data structures and algorithms to engineer them into low-latency, high-performance systems.
+            </p>
+          </div>
+
+          <!-- Block 2: The Vision -->
+          <div class="about-block reveal-stagger" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-left:4px solid #6c8dff; padding:1.5rem; border-radius:0.875rem; transition:all 0.3s ease;">
+            <h4 style="font-size:1.125rem; font-weight:600; color:#ffffff; margin-bottom:0.5rem; font-family:'JetBrains Mono', monospace;">
+              <span style="color:#6c8dff;">></span> <strong style="color:#ffffff;">The Vision:</strong>
+            </h4>
+            <p style="font-size:0.95rem; color:rgba(255,255,255,0.75); line-height:1.7;">
+              I am driven by the physics of movement and real-time analytics—a passion born from being a massive cricket fan. I apply this lens to the modern gaming industry, focusing on living ecosystems powered by Generative AI and advanced motion capture.
+            </p>
+          </div>
+
+          <!-- Block 3: The Toolkit -->
+          <div class="about-block reveal-stagger" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-left:4px solid #10b981; padding:1.5rem; border-radius:0.875rem; transition:all 0.3s ease;">
+            <h4 style="font-size:1.125rem; font-weight:600; color:#ffffff; margin-bottom:0.5rem; font-family:'JetBrains Mono', monospace;">
+              <span style="color:#10b981;">></span> <strong style="color:#ffffff;">The Toolkit:</strong>
+            </h4>
+            <p style="font-size:0.95rem; color:rgba(255,255,255,0.75); line-height:1.7;">
+              Python, C++, and a relentless focus on optimization. From low-latency AI voice chat pipelines to real-time computer vision, my toolkit is built to architect the future of interactive entertainment.
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Tech Stack Pills with Magnetic Pull Physics -->
+        <div style="margin-top:2rem; padding-top:1.5rem; border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+          <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+            <span class="magnetic-pill tag-pill" style="border-color:#f97316; color:#f97316; cursor:pointer;">LeetCode (350+ Solved) 🧩</span>
+            <span class="magnetic-pill tag-pill" style="border-color:var(--accent); color:var(--accent); cursor:pointer;">Python ⚡</span>
+            <span class="magnetic-pill tag-pill" style="border-color:#6c8dff; color:#6c8dff; cursor:pointer;">C++ 🛠</span>
+            <span class="magnetic-pill tag-pill" style="border-color:#10b981; color:#10b981; cursor:pointer;">PyTorch 🧠</span>
+            <span class="magnetic-pill tag-pill" style="border-color:#f59e0b; color:#f59e0b; cursor:pointer;">OpenCV 🎥</span>
+            <span class="magnetic-pill tag-pill" style="border-color:#ec4899; color:#ec4899; cursor:pointer;">FastAPI 🚀</span>
+          </div>
+
+          <div style="display:flex; gap:1rem;">
+            <a href="https://github.com/satendravron" target="_blank" class="btn-pill btn-light" style="padding:0.5rem 1rem; font-size:0.8rem;">GitHub ↗</a>
+            <a href="https://www.linkedin.com/in/satendravgupta/" target="_blank" class="btn-pill btn-light" style="padding:0.5rem 1rem; font-size:0.8rem;">LinkedIn ↗</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- CREATE BAND -->
+  <section class="shell">
+    <div class="create-band">
+      <div class="band-tile tile-light">We</div>
+      <div class="band-tile tile-accent">Architect</div>
+      <div class="band-tile tile-dark">➜</div>
+      <div class="band-tile tile-ghost">Scale</div>
+    </div>
+  </section>
+
+  <!-- PORTFOLIO (#works) -->
+  <section id="works">
+    <div class="shell">
+      <div class="eyebrow-tag" style="display: block; text-align: center;">Selected Portfolio</div>
+      <h2 style="font-size: 3rem; font-weight: 600; text-align: center; letter-spacing: -0.02em;">Featured Systems Shipped</h2>
+
+      <div class="portfolio-grid">
+        <!-- Work 1 -->
+        <article class="work-card">
+          <div class="work-card-meta">
+            <span>Computer Vision — 2026</span>
+            <div class="work-card-badge">↗</div>
+          </div>
+          <div class="work-card-watermark">
+            <svg width="180" height="180" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c-2-2.5-4.5-4-7.5-4a5.5 5.5 0 1 0 0 11c3 0 5.5-1.5 7.5-4zm0 0c2 2.5 4.5 4 7.5 4a5.5 5.5 0 1 0 0-11c-3 0-5.5 1.5-7.5 4z"/></svg>
+          </div>
+          <div>
+            <h3 style="font-size: 1.875rem; font-weight: 600;">BowlForm AI</h3>
+            <p style="margin-top: 0.5rem; font-size: 0.875rem; color: rgba(255,255,255,0.6); max-width: 28rem;">
+              Real-time computer vision system tracking bowler kinetic chain frame-by-frame with zero dropped frames using PyTorch & OpenCV ensemble.
+            </p>
+            <div style="margin-top: 1.25rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <span class="tag-pill">PyTorch</span>
+              <span class="tag-pill">OpenCV</span>
+              <span class="tag-pill">Ensemble Pose</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Work 2 -->
+        <article class="work-card">
+          <div class="work-card-meta">
+            <span>Voice AI & Docker — 2026</span>
+            <div class="work-card-badge">↗</div>
+          </div>
+          <div class="work-card-watermark">
+            <svg width="180" height="180" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c-2-2.5-4.5-4-7.5-4a5.5 5.5 0 1 0 0 11c3 0 5.5-1.5 7.5-4zm0 0c2 2.5 4.5 4 7.5 4a5.5 5.5 0 1 0 0-11c-3 0-5.5 1.5-7.5 4z"/></svg>
+          </div>
+          <div>
+            <h3 style="font-size: 1.875rem; font-weight: 600;">Real-Time AI Voice Chat</h3>
+            <p style="margin-top: 0.5rem; font-size: 0.875rem; color: rgba(255,255,255,0.6); max-width: 28rem;">
+              Low-latency voice pipeline collapsing STT → LLM → TTS audio stream delay for natural conversational interactions.
+            </p>
+            <div style="margin-top: 1.25rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <span class="tag-pill">Python</span>
+              <span class="tag-pill">Docker</span>
+              <span class="tag-pill">WebSockets</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Work 3 -->
+        <article class="work-card">
+          <div class="work-card-meta">
+            <span>Android & FastAPI — 2026</span>
+            <a href="https://github.com/satendravron/Mail-expert-AI" target="_blank" class="work-card-badge">↗</a>
+          </div>
+          <div class="work-card-watermark">
+            <svg width="180" height="180" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c-2-2.5-4.5-4-7.5-4a5.5 5.5 0 1 0 0 11c3 0 5.5-1.5 7.5-4zm0 0c2 2.5 4.5 4 7.5 4a5.5 5.5 0 1 0 0-11c-3 0-5.5 1.5-7.5 4z"/></svg>
+          </div>
+          <div>
+            <h3 style="font-size: 1.875rem; font-weight: 600;">Mail-Expert-AI</h3>
+            <p style="margin-top: 0.5rem; font-size: 0.875rem; color: rgba(255,255,255,0.6); max-width: 28rem;">
+              Intelligent email triage Android app & Chrome Extension scoring priority and extracting deadlines using FastAPI & LLM APIs.
+            </p>
+            <div style="margin-top: 1.25rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <span class="tag-pill">Kotlin</span>
+              <span class="tag-pill">FastAPI</span>
+              <span class="tag-pill">Android Studio</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Work 4 -->
+        <article class="work-card">
+          <div class="work-card-meta">
+            <span>Full-Stack & ML — 2025</span>
+            <div class="work-card-badge">↗</div>
+          </div>
+          <div class="work-card-watermark">
+            <svg width="180" height="180" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c-2-2.5-4.5-4-7.5-4a5.5 5.5 0 1 0 0 11c3 0 5.5-1.5 7.5-4zm0 0c2 2.5 4.5 4 7.5 4a5.5 5.5 0 1 0 0-11c-3 0-5.5 1.5-7.5 4z"/></svg>
+          </div>
+          <div>
+            <h3 style="font-size: 1.875rem; font-weight: 600;">MPOnline ML Pipeline</h3>
+            <p style="margin-top: 0.5rem; font-size: 0.875rem; color: rgba(255,255,255,0.6); max-width: 28rem;">
+              Integrated SQL-backed REST APIs with production ML models & automated CI/CD workflows using n8n.
+            </p>
+            <div style="margin-top: 1.25rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <span class="tag-pill">REST APIs</span>
+              <span class="tag-pill">n8n CI/CD</span>
+              <span class="tag-pill">SQL</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES SECTION -->
+  <section id="services">
+    <div class="shell">
+      <div class="eyebrow-tag">Core Capabilities</div>
+      <h2 style="font-size: 3rem; font-weight: 600; letter-spacing: -0.02em;">What I Build Best</h2>
+
+      <div class="services-list">
+        <div class="service-row" onclick="openModal()">
+          <span class="service-idx">01</span>
+          <h3 class="service-title">AI/ML & Computer Vision</h3>
+          <p class="service-desc">Real-time object detection, pose estimation, and low-latency inference pipelines.</p>
+          <div class="service-arrow">↗</div>
+        </div>
+        
+        <div class="service-row" onclick="openModal()">
+          <span class="service-idx">02</span>
+          <h3 class="service-title">Full Stack Software Development</h3>
+          <p class="service-desc">Scalable web & mobile products using Vue.js, React, Python FastAPI, Java, and SQL.</p>
+          <div class="service-arrow">↗</div>
+        </div>
+
+        <div class="service-row" onclick="openModal()">
+          <span class="service-idx">03</span>
+          <h3 class="service-title">Generative AI & LLM Systems</h3>
+          <p class="service-desc">RAG pipelines, prompt engineering, LangChain agents, and intelligent triage models.</p>
+          <div class="service-arrow">↗</div>
+        </div>
+
+        <div class="service-row" onclick="openModal()">
+          <span class="service-idx">04</span>
+          <h3 class="service-title">DevOps & Cloud Automation</h3>
+          <p class="service-desc">Docker containerization, CI/CD pipelines, and high-throughput microservice architecture.</p>
+          <div class="service-arrow">↗</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS PANEL -->
+  <section id="stats" class="shell">
+    <div class="stats-panel">
+      <div class="eyebrow-tag" style="color:rgba(255,255,255,0.7);">By The Numbers</div>
+      <h2 style="font-size: 2.25rem; font-weight: 500; max-width: 22ch; margin-top: 1rem;">Proof in the engineering, not just the words.</h2>
+
+      <div class="stats-grid">
+        <div>
+          <div class="stat-num" id="stat1">0</div>
+          <div class="stat-label">Dropped Frames in Live CV</div>
+        </div>
+        <div>
+          <div class="stat-num" id="stat2">35%</div>
+          <div class="stat-label">LLM API Latency Cut</div>
+        </div>
+        <div>
+          <div class="stat-num" id="stat3">4+</div>
+          <div class="stat-label">Years DSA & ML Foundation</div>
+        </div>
+        <div>
+          <div class="stat-num" id="stat4">100%</div>
+          <div class="stat-label">Production Ready Builds</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer id="contact">
+  <div class="shell footer-content">
+    <div class="footer-cta-row">
+      <div>
+        <div class="eyebrow-tag" style="color:rgba(255,255,255,0.7);">Open To Roles</div>
+        <h2 style="font-size: 3.5rem; font-weight: 600; letter-spacing: -0.03em; max-width: 16ch;">
+          Have a project or role in mind? Let's talk.
+        </h2>
+      </div>
+      <button class="btn-pill btn-dark" style="background:#ffffff; color:var(--ink);" onclick="openModal()">
+        Start a Project
+        <span class="btn-arrow-badge" style="background:var(--ink); color:#ffffff;">↗</span>
+      </button>
+    </div>
+
+    <div class="footer-cols">
+      <div>
+        <div style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Satendra Gupta</div>
+        <p style="font-size: 0.875rem; color: rgba(255,255,255,0.55); line-height: 1.6;">
+          AI/ML Engineer & Full Stack Developer building production-grade intelligence and low-latency systems.
+        </p>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Navigation</div>
+        <div class="footer-link-list">
+          <a href="#about">About Studio</a>
+          <a href="#works">Selected Work</a>
+          <a href="#services">Capabilities</a>
+          <a href="resume.pdf" target="_blank">Download Resume 📄</a>
+        </div>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Contact</div>
+        <div class="footer-link-list">
+          <a href="mailto:satendravron@gmail.com">satendravron@gmail.com</a>
+          <a href="tel:+919129066771">+91 9129066771</a>
+          <a href="https://www.linkedin.com/in/satendravgupta/" target="_blank">LinkedIn ↗</a>
+          <a href="https://github.com/satendravron" target="_blank">GitHub ↗</a>
+        </div>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Education</div>
+        <p style="font-size: 0.875rem; color: rgba(255,255,255,0.6);">
+          VIT Bhopal University<br>
+          B.Tech CSE (AI & ML)<br>
+          CGPA: 7.51 (2023–2027)
+        </p>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem; font-size: 0.75rem; color: rgba(255,255,255,0.45);">
+      <span>© 2026 Satendra Gupta. Built with Lumora Architecture.</span>
+      <span>Status: <span style="color: var(--accent-from);">Available for Engineering Roles</span></span>
+    </div>
+  </div>
+
+  <div class="footer-watermark">SATENDRA</div>
+</footer>
+
+<!-- NavMenu Overlay -->
+<div id="navMenu">
+  <div class="nav-menu-header">
+    <div style="font-size: 1.25rem; font-weight: 600;">Satendra Gupta</div>
+    <button class="btn-pill btn-outline" style="color:#fff; border-color:rgba(255,255,255,0.2)" onclick="closeNavMenu()">Close ✕</button>
+  </div>
+  <div class="nav-menu-list">
+    <div class="nav-menu-item" onclick="scrollToId('home'); closeNavMenu();">01 Home</div>
+    <div class="nav-menu-item" onclick="scrollToId('about'); closeNavMenu();">02 About</div>
+    <div class="nav-menu-item" onclick="scrollToId('works'); closeNavMenu();">03 Selected Work</div>
+    <div class="nav-menu-item" onclick="scrollToId('services'); closeNavMenu();">04 Capabilities</div>
+    <div class="nav-menu-item" onclick="openModal(); closeNavMenu();">05 Contact</div>
+  </div>
+</div>
+
+<!-- RequestModal Overlay -->
+<div id="requestModal">
+  <div class="modal-card">
+    <button onclick="closeModal()" style="position: absolute; top: 1.5rem; right: 1.5rem; font-size: 1.25rem; color: rgba(17,17,17,0.5);">✕</button>
+    <div class="eyebrow-tag" style="margin-bottom: 0.5rem;">Start a Conversation</div>
+    <h2 style="font-size: 1.875rem; font-weight: 600; letter-spacing: -0.02em;">Tell me what you're building.</h2>
+
+    <form id="modalForm" style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+      <input type="hidden" name="to_email" value="satendravron@gmail.com">
+      <div>
+        <label style="display:block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: rgba(17,17,17,0.5); margin-bottom: 0.25rem;">Your Name</label>
+        <input type="text" name="name" required placeholder="e.g. Alex Rivera" class="form-control">
+      </div>
+      <div>
+        <label style="display:block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: rgba(17,17,17,0.5); margin-bottom: 0.25rem;">Your Email</label>
+        <input type="email" name="email" required placeholder="alex@company.com" class="form-control">
+      </div>
+      <div>
+        <label style="display:block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: rgba(17,17,17,0.5); margin-bottom: 0.25rem;">Project / Role Details</label>
+        <textarea name="message" required rows="3" placeholder="Tell me about your AI/ML or Full-Stack project..." class="form-control" style="resize:none;"></textarea>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+        <span style="font-size: 0.75rem; color: rgba(17,17,17,0.45);">Replies within 24 hours.</span>
+        <button type="submit" class="btn-pill btn-dark" id="modalSubmitBtn">Send Request 🚀</button>
+      </div>
+      <div id="modalStatus" style="font-size: 0.875rem; color: var(--accent); margin-top: 0.5rem;"></div>
+    </form>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": { "lenis": "https://unpkg.com/lenis@1.3.23/dist/lenis.mjs" } }
+</script>
+
+<script type="module">
+  import Lenis from 'lenis';
+  
+  // Initialize Lenis Smooth Scroll
+  window.scrollTo(0, 0);
+  const lenis = new Lenis({ smoothWheel: true });
+  function raf(t) { lenis.raf(t); requestAnimationFrame(raf); }
+  requestAnimationFrame(raf);
+  window.lenis = lenis;
+
+  // Loader count-up 000 -> 100
+  const loader = document.getElementById('pageLoader');
+  const countEl = document.getElementById('loaderCount');
+  const fillEl = document.getElementById('loaderFill');
+  
+  let start = null;
+  const duration = 1300;
+  
+  function stepLoader(timestamp) {
+    if (!start) start = timestamp;
+    const progress = Math.min((timestamp - start) / duration, 1);
+    const ease = progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+    const count = Math.floor(ease * 100);
+    
+    countEl.textContent = String(count).padStart(3, '0');
+    fillEl.style.width = count + '%';
+    
+    if (progress < 1) {
+      requestAnimationFrame(stepLoader);
+    } else {
+      setTimeout(() => {
+        loader.classList.add('exit');
+        triggerEntranceReveals();
+      }, 200);
+    }
+  }
+  requestAnimationFrame(stepLoader);
+
+  // Entrance Line & Fade Reveals
+  function triggerEntranceReveals() {
+    document.querySelectorAll('.reveal-line-inner').forEach((el, i) => {
+      setTimeout(() => el.classList.add('visible'), i * 120);
+    });
+    document.querySelectorAll('.reveal-fade').forEach(el => el.classList.add('visible'));
+  }
+
+  // Live Clock Component
+  function updateClock() {
+    const now = new Date();
+    let hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'pm' : 'am';
+    hours = hours % 12 || 12;
+    
+    document.getElementById('liveTime').textContent = `${hours}:${minutes}${ampm}`;
+    const options = { day: 'numeric', month: 'short', year: 'numeric' };
+    document.getElementById('liveDate').textContent = now.toLocaleDateString('en-GB', options);
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // 3D Liquid Canvas Effect
+  const canvas = document.getElementById('liquidCanvas');
+  const ctx = canvas.getContext('2d');
+  let w = canvas.width = window.innerWidth;
+  let h = canvas.height = window.innerHeight;
+  let mouse = { x: w/2, y: h/2, targetX: w/2, targetY: h/2 };
+
+  window.addEventListener('resize', () => {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    mouse.targetX = e.clientX;
+    mouse.targetY = e.clientY;
+  });
+
+  let particles = [];
+  for(let i=0; i<35; i++) {
+    particles.push({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      r: Math.random() * 140 + 60,
+      vx: (Math.random() - 0.5) * 0.8,
+      vy: (Math.random() - 0.5) * 0.8
+    });
+  }
+
+  function renderLiquid() {
+    mouse.x += (mouse.targetX - mouse.x) * 0.05;
+    mouse.y += (mouse.targetY - mouse.y) * 0.05;
+
+    ctx.clearRect(0, 0, w, h);
+    
+    const grad = ctx.createRadialGradient(mouse.x, mouse.y, 10, mouse.x, mouse.y, 350);
+    grad.addColorStop(0, 'rgba(207,128,71,0.25)');
+    grad.addColorStop(0.5, 'rgba(108,141,255,0.12)');
+    grad.addColorStop(1, 'rgba(201,201,201,0)');
+
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0 || p.x > w) p.vx *= -1;
+      if (p.y < 0 || p.y > h) p.vy *= -1;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.06)';
+      ctx.fill();
+    });
+
+    requestAnimationFrame(renderLiquid);
+  }
+  renderLiquid();
+
+  // Hero Card Carousel
+  const heroSlides = [
+    { caption: "COMPUTER VISION", title: "BowlForm AI: Real-Time Kinetic Tracking" },
+    { caption: "VOICE AI STREAM", title: "Low-Latency Docker Voice Pipeline" },
+    { caption: "FULL-STACK AI", title: "Mail-Expert-AI: Kotlin & FastAPI Triage" }
+  ];
+  let currentSlide = 0;
+  window.nextHeroSlide = function() {
+    currentSlide = (currentSlide + 1) % heroSlides.length;
+    document.getElementById('heroCardCaption').textContent = heroSlides[currentSlide].caption;
+    document.getElementById('heroCardTitle').textContent = heroSlides[currentSlide].title;
+  };
+
+  // Scroll To Helper
+  window.scrollToId = function(id) {
+    const target = document.getElementById(id);
+    if (target && window.lenis) {
+      window.lenis.scrollTo(target);
+    }
+  };
+
+  // Modals & Navigation Overlays
+  window.openNavMenu = function() { document.getElementById('navMenu').classList.add('active'); };
+  window.closeNavMenu = function() { document.getElementById('navMenu').classList.remove('active'); };
+  
+  window.openModal = function() { document.getElementById('requestModal').classList.add('active'); };
+  window.closeModal = function() { document.getElementById('requestModal').classList.remove('active'); };
+
+  // -----------------------------------------------------------------
+  // 0. Accent Color Theme Switcher (Lumora Amber ↔ Cyberpunk Neon Cyan)
+  // -----------------------------------------------------------------
+  window.toggleAccentTheme = function() {
+    const root = document.documentElement;
+    const current = getComputedStyle(root).getPropertyValue('--accent-from').trim();
+    if (current === '#cf8047') {
+      root.style.setProperty('--accent', '#2dd4bf');
+      root.style.setProperty('--accent-from', '#2dd4bf');
+      root.style.setProperty('--accent-to', '#06b6d4');
+    } else {
+      root.style.setProperty('--accent', '#b15f2c');
+      root.style.setProperty('--accent-from', '#cf8047');
+      root.style.setProperty('--accent-to', '#97501f');
+    }
+  };
+
+  // -----------------------------------------------------------------
+  // 1. Real-Time Terminal Typewriter Reveal
+  // -----------------------------------------------------------------
+  const termHeader = document.getElementById('terminalHeaderTyping');
+  let hasTyped = false;
+
+  function typeTerminalHeadline() {
+    if (hasTyped || !termHeader) return;
+    hasTyped = true;
+
+    const phase1 = 'Executing: AI_Architecture.exe ...';
+    const phase2 = 'system.init("Satendra Gupta")';
+    let idx = 0;
+
+    function typePhase1() {
+      if (idx < phase1.length) {
+        termHeader.textContent += phase1.charAt(idx);
+        idx++;
+        setTimeout(typePhase1, 30);
+      } else {
+        setTimeout(erasePhase1, 600);
+      }
+    }
+
+    function erasePhase1() {
+      if (termHeader.textContent.length > 0) {
+        termHeader.textContent = termHeader.textContent.slice(0, -1);
+        setTimeout(erasePhase1, 15);
+      } else {
+        idx = 0;
+        setTimeout(typePhase2, 200);
+      }
+    }
+
+    function typePhase2() {
+      if (idx < phase2.length) {
+        termHeader.textContent += phase2.charAt(idx);
+        idx++;
+        setTimeout(typePhase2, 45);
+      }
+    }
+
+    typePhase1();
+  }
+
+  // -----------------------------------------------------------------
+  // 2. Magnetic Pull Physics on Tech Stack Pills
+  // -----------------------------------------------------------------
+  document.querySelectorAll('.magnetic-pill').forEach(pill => {
+    pill.addEventListener('mousemove', (e) => {
+      const rect = pill.getBoundingClientRect();
+      const x = e.clientX - (rect.left + rect.width / 2);
+      const y = e.clientY - (rect.top + rect.height / 2);
+      pill.style.transform = `translate(${x * 0.3}px, ${y * 0.3}px) scale(1.08)`;
+      pill.style.transition = 'transform 0.1s ease-out';
+    });
+
+    pill.addEventListener('mouseleave', () => {
+      pill.style.transform = 'translate(0px, 0px) scale(1)';
+      pill.style.transition = 'transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)';
+    });
+  });
+
+  // -----------------------------------------------------------------
+  // 3. Staggered Fade-In on Scroll for About Blocks
+  // -----------------------------------------------------------------
+  const aboutSection = document.getElementById('about');
+  if (aboutSection) {
+    const aboutObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          typeTerminalHeadline();
+          const staggerItems = aboutSection.querySelectorAll('.reveal-stagger');
+          staggerItems.forEach((item, index) => {
+            setTimeout(() => {
+              item.style.opacity = '1';
+              item.style.transform = 'translateY(0)';
+              item.style.boxShadow = '0 10px 30px rgba(45, 212, 191, 0.08)';
+            }, index * 120);
+          });
+          aboutObserver.disconnect();
+        }
+      });
+    }, { threshold: 0.2 });
+
+    aboutObserver.observe(aboutSection);
+  }
+
+  // Modal Form Submission Handler
+  const modalForm = document.getElementById('modalForm');
+  if (modalForm) {
+    modalForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('modalSubmitBtn');
+      const status = document.getElementById('modalStatus');
+      btn.textContent = 'Sending...';
+      btn.disabled = true;
+
+      const formData = new FormData(modalForm);
+      try {
+        const res = await fetch('https://api.web3forms.com/submit', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.success) {
+          status.textContent = '✓ Request received! Satendra will reply within 24 hours.';
+          modalForm.reset();
+        } else {
+          window.location.href = `mailto:satendravron@gmail.com?subject=Portfolio Inquiry from ${encodeURIComponent(formData.get('name'))}&body=${encodeURIComponent(formData.get('message'))}`;
+        }
+      } catch (err) {
+        window.location.href = `mailto:satendravron@gmail.com?subject=Portfolio Inquiry&body=${encodeURIComponent(formData.get('message'))}`;
+      } finally {
+        btn.textContent = 'Send Request 🚀';
+        btn.disabled = false;
+      }
+    });
+  }
+</script>
+</body>
+</html>
