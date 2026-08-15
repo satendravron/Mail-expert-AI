@@ -49,8 +49,95 @@ TOKEN_FILE = "token.json"
 MAX_EMAILS_TO_FETCH = 15
 
 
-def get_gmail_service():
-    """Handles the OAuth dance. First run = browser popup. Later runs = silent."""
+def is_gmail_authenticated() -> tuple[bool, str | None]:
+    """Checks if token.json exists and credentials are valid/refreshable.
+    Returns (is_auth, user_email)."""
+    if not os.path.exists(TOKEN_FILE):
+        return False, None
+
+    try:
+        creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
+        if creds and creds.expired and creds.refresh_token:
+            try:
+                creds.refresh(Request())
+                with open(TOKEN_FILE, "w") as token:
+                    token.write(creds.to_json())
+            except Exception:
+                return False, None
+
+        if creds and creds.valid:
+            service = build("gmail", "v1", credentials=creds)
+            try:
+                profile = service.users().getProfile(userId="me").execute()
+                email = profile.get("emailAddress", "Connected Account")
+                return True, email
+            except Exception:
+                return True, "Connected Account"
+    except Exception:
+        return False, None
+
+    return False, None
+
+
+def logout_gmail() -> bool:
+    """Logs out of Gmail by removing the token.json file."""
+    if os.path.exists(TOKEN_FILE):
+        try:
+            os.remove(TOKEN_FILE)
+            return True
+        except Exception as e:
+            print(f"[warn] Could not remove token file: {e}")
+            return False
+    return True
+
+
+
+_LAST_CODE_VERIFIER: str | None = None
+
+
+def get_authorization_url(redirect_uri: str) -> str:
+    """Generates a Google OAuth authorization URL suitable for mobile or desktop browser login."""
+    global _LAST_CODE_VERIFIER
+    from google_auth_oauthlib.flow import Flow
+    if not os.path.exists(CREDENTIALS_FILE):
+        raise FileNotFoundError(
+            f"Couldn't find '{CREDENTIALS_FILE}' in this folder. "
+            "Download client credentials from Google Cloud Console."
+        )
+    flow = Flow.from_client_secrets_file(
+        CREDENTIALS_FILE,
+        scopes=SCOPES,
+        redirect_uri=redirect_uri
+    )
+    auth_url, _ = flow.authorization_url(
+        access_type="offline",
+        prompt="select_account consent",
+        include_granted_scopes="true"
+    )
+    _LAST_CODE_VERIFIER = getattr(flow, "code_verifier", None)
+    return auth_url
+
+
+def exchange_code_for_token(code: str, redirect_uri: str):
+    """Exchanges OAuth code from web redirect into credentials and persists token.json."""
+    global _LAST_CODE_VERIFIER
+    from google_auth_oauthlib.flow import Flow
+    flow = Flow.from_client_secrets_file(
+        CREDENTIALS_FILE,
+        scopes=SCOPES,
+        redirect_uri=redirect_uri
+    )
+    if _LAST_CODE_VERIFIER:
+        flow.code_verifier = _LAST_CODE_VERIFIER
+    flow.fetch_token(code=code)
+    creds = flow.credentials
+    with open(TOKEN_FILE, "w") as token:
+        token.write(creds.to_json())
+    return creds
+
+
+def get_gmail_service(allow_local_server: bool = False):
+    """Handles the OAuth dance. Server mode raises error if auth needed; CLI mode launches browser."""
     creds = None
 
     if os.path.exists(TOKEN_FILE):
@@ -70,8 +157,11 @@ def get_gmail_service():
                     "Make sure you downloaded it from Google Cloud Console "
                     "and renamed it to exactly 'credentials.json'."
                 )
-            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
-            creds = flow.run_local_server(port=0)  # opens the browser login window
+            if allow_local_server:
+                flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
+                creds = flow.run_local_server(port=0)  # opens the browser login window
+            else:
+                raise RuntimeError("Gmail authentication required. Please connect via OAuth URL.")
 
         with open(TOKEN_FILE, "w") as token:
             token.write(creds.to_json())
@@ -152,31 +242,54 @@ def fetch_recent_emails(service, user_id: str, max_results: int = MAX_EMAILS_TO_
     return emails
 
 
+def sync_gmail_emails(user_id: str = "local_user", allow_local_server: bool = False) -> dict:
+    """Synchronizes recent Gmail emails into SQLite DB for a user.
+    Returns a status dict: {"status": "success", "count": N, "email": email}
+    or {"status": "auth_required", "message": "..."} / {"status": "error", "message": "..."}
+    """
+    db.init_db()
+    is_auth, email_addr = is_gmail_authenticated()
+    if not is_auth and not allow_local_server:
+        return {"status": "auth_required", "message": "Gmail authentication required. Please login with Google."}
+
+    try:
+        prefs = db.get_preferences_model(user_id)
+        service = get_gmail_service(allow_local_server=allow_local_server)
+        emails = fetch_recent_emails(service, user_id=user_id)
+
+        classified = [classify_email(e, prefs) for e in emails]
+        for e in classified:
+            db.upsert_email(e)
+            db.create_reminders_for_email(e)
+
+        return {
+            "status": "success",
+            "count": len(classified),
+            "email": email_addr or "Connected Account",
+            "emails": classified
+        }
+    except Exception as err:
+        return {"status": "error", "message": str(err)}
+
+
 def main():
     db.init_db()
-    prefs = db.get_preferences_model("local_user")  # loads saved prefs, or creates defaults on first run
-
     print("Connecting to Gmail (a browser window will open on first run)...")
-    service = get_gmail_service()
+    res = sync_gmail_emails(user_id="local_user", allow_local_server=True)
+    if res.get("status") == "success":
+        classified = res.get("emails", [])
+        classified.sort(key=lambda e: e.importance_score, reverse=True)
+        print(f"\n{'='*70}\nSAVED {len(classified)} EMAILS TO mail_expert.db\n{'='*70}")
+        for e in classified:
+            tier = e.importance.upper() if isinstance(e.importance, str) else e.importance.value.upper()
+            print(f"[{tier}] (score={e.importance_score})  {e.category}  —  {e.subject[:60]}")
 
-    print(f"Fetching your {MAX_EMAILS_TO_FETCH} most recent inbox emails...")
-    emails = fetch_recent_emails(service, user_id="local_user")
-
-    classified = [classify_email(e, prefs) for e in emails]
-    for e in classified:
-        db.upsert_email(e)
-        db.create_reminders_for_email(e)
-
-    classified.sort(key=lambda e: e.importance_score, reverse=True)
-
-    print(f"\n{'='*70}\nSAVED {len(classified)} EMAILS TO mail_expert.db\n{'='*70}")
-    for e in classified:
-        tier = e.importance.upper() if isinstance(e.importance, str) else e.importance.value.upper()
-        print(f"[{tier}] (score={e.importance_score})  {e.category}  —  {e.subject[:60]}")
-
-    print("\nDone. Run 'uvicorn api:app --reload' and open http://127.0.0.1:8000/ "
-          "to view these in the web inbox.")
+        print("\nDone. Run 'uvicorn api:app --reload' and open http://127.0.0.1:8000/ "
+              "to view these in the web inbox.")
+    else:
+        print(f"[Error] Sync failed: {res.get('message')}")
 
 
 if __name__ == "__main__":
     main()
+

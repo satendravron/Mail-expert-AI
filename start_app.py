@@ -1,11 +1,8 @@
 """
 One-command launcher for Mail Expert AI.
 
-Starts BOTH the web server (uvicorn) and the reminder scheduler as background
-processes from a single terminal, and opens your browser to the dashboard.
-Gmail fetching is deliberately NOT auto-started here since it's something
-you trigger on demand (run `python gmail_connector.py` whenever you want
-fresh mail) rather than something that should run continuously.
+Starts BOTH the web server (uvicorn) bound to all network interfaces (0.0.0.0)
+and the reminder scheduler as background processes from a single terminal.
 
 Run:
     python start_app.py
@@ -16,9 +13,24 @@ Stop:
 import subprocess
 import sys
 import time
+import socket
 import webbrowser
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 PROCESSES = []
+
+
+def get_local_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "127.0.0.1"
 
 
 def start(cmd: list, name: str):
@@ -35,8 +47,6 @@ def start(cmd: list, name: str):
 
 
 def stream_output():
-    """Interleaves output from both processes with a [name] prefix so you can
-    still see what's happening, same as running them in separate terminals."""
     import threading
 
     def _pump(name, proc):
@@ -50,14 +60,22 @@ def stream_output():
 
 
 def main():
-    api_proc = start([sys.executable, "-m", "uvicorn", "api:app", "--reload"], "server")
+    local_ip = get_local_ip()
+
+    api_proc = start([sys.executable, "-m", "uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000", "--reload"], "server")
     scheduler_proc = start([sys.executable, "reminder_scheduler.py"], "scheduler")
 
     stream_output()
 
     print("\nGiving the server a moment to start...")
     time.sleep(3)
-    print("Opening dashboard at http://127.0.0.1:8000/ ...")
+
+    print("=" * 65)
+    print(f"📬 MAIL EXPERT AI IS LIVE AND READY!")
+    print(f"  • Local Laptop URL : http://127.0.0.1:8000/")
+    print(f"  • Mobile Phone URL : http://{local_ip}:8000/")
+    print("=" * 65)
+
     webbrowser.open("http://127.0.0.1:8000/")
 
     print("\nBoth processes running. Press Ctrl+C to stop everything.\n")

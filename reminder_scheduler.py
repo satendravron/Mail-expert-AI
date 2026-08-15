@@ -40,12 +40,11 @@ def fire_desktop_notification(title: str, message: str):
             title=title,
             message=message,
             app_name="Mail Expert AI",
-            timeout=15,  # seconds the popup stays visible (platform-dependent)
+            timeout=15,
         )
     except Exception as e:
-        # Desktop notifications can fail silently on some Linux setups
-        # without a notification daemon running — don't crash the loop.
         print(f"[warn] Could not show desktop notification: {e}")
+
 
 
 def offset_label(offset_minutes: int) -> str:

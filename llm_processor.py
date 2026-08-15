@@ -73,7 +73,7 @@ def _extractive_fallback(subject: str, body: str) -> Dict[str, Any]:
     }
 
 
-def generate_email_summary_and_actions(subject: str, body: str) -> Dict[str, Any]:
+def generate_email_summary_and_actions(subject: str, body: str, user_id: str = "local_user") -> Dict[str, Any]:
     """
     Generates summary and action items. Uses Gemini/OpenAI API if key present,
     otherwise uses the offline extractive fallback engine.
@@ -81,11 +81,21 @@ def generate_email_summary_and_actions(subject: str, body: str) -> Dict[str, Any
     gemini_key = os.getenv("GEMINI_API_KEY")
     openai_key = os.getenv("OPENAI_API_KEY")
 
+    if not gemini_key and not openai_key:
+        try:
+            import db
+            prefs = db.get_preferences_dict(user_id)
+            gemini_key = prefs.get("gemini_api_key")
+            openai_key = prefs.get("openai_api_key")
+        except Exception:
+            pass
+
     if gemini_key:
         try:
             import google.generativeai as genai
             genai.configure(api_key=gemini_key)
-            model = genai.GenerativeModel("gemini-1.5-flash")
+            model_name = "gemini-1.5-flash"
+            model = genai.GenerativeModel(model_name)
             prompt = f"""
             Analyze the following email and return JSON with keys:
             - summary: a 1-2 sentence executive summary of the email.
@@ -95,7 +105,6 @@ def generate_email_summary_and_actions(subject: str, body: str) -> Dict[str, Any
             Body: {body}
             """
             response = model.generate_content(prompt)
-            # Try parsing JSON response
             text = response.text.strip()
             json_match = re.search(r"\{.*\}", text, re.DOTALL)
             if json_match:

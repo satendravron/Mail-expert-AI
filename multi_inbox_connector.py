@@ -99,9 +99,11 @@ class MultiInboxConnector:
             if provider == "gmail":
                 try:
                     import gmail_connector
-                    # Triggers Gmail API fetch
-                    gmail_connector.main()
-                    sync_results.append({"account": acc_name, "status": "synced", "provider": "gmail"})
+                    res = gmail_connector.sync_gmail_emails(user_id=self.user_id, allow_local_server=False)
+                    if res.get("status") == "success":
+                        sync_results.append({"account": acc_name, "status": "synced", "provider": "gmail", "count": res.get("count", 0)})
+                    else:
+                        sync_results.append({"account": acc_name, "status": res.get("status", "error"), "error": res.get("message")})
                 except Exception as err:
                     sync_results.append({"account": acc_name, "status": "error", "error": str(err)})
             else:

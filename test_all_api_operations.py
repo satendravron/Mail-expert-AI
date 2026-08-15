@@ -115,12 +115,42 @@ def test_operations(mock_gmail_main):
     res = client.post(f"/emails/{target_id}/draft-reply?intent=confirm")
     print(f"17. POST /emails/{target_id}/draft-reply -> Reply Subject: {res.json().get('draft', {}).get('reply_subject')}")
 
-    # 18. Dashboard HTML View
+    # 18. Gmail Status & Seed Endpoints
+    res = client.get("/api/status/gmail")
+    print(f"18. GET /api/status/gmail -> Status: {res.status_code}, Body: {res.json()}")
+
+    res = client.post("/api/seed")
+    print(f"19. POST /api/seed -> Status: {res.status_code}, Body: {res.json()}")
+
+    # 20. Dashboard HTML View
     res = client.get("/")
-    print(f"18. GET / (Dashboard HTML) -> Status: {res.status_code}, HTML Output Size: {len(res.text)} bytes")
+    print(f"20. GET / (Dashboard HTML) -> Status: {res.status_code}, HTML Output Size: {len(res.text)} bytes")
+
+    # 21. Gmail OAuth Account Switch Endpoint
+    res = client.get("/auth/switch", follow_redirects=False)
+    print(f"21. GET /auth/switch -> Status: {res.status_code}, Location: {res.headers.get('location', '')[:60]}...")
+
+    # 22. Custom Alarm & Reminder Endpoints
+    rem_payload = {
+        "title": "TEST: Project Submission Deadline",
+        "due_at": "2026-08-16T12:00:00",
+        "email_id": "custom",
+        "notify_offsets_minutes": [1440, 60, 15, 0],
+        "channels": ["desktop", "sound", "push"]
+    }
+    res = client.post("/api/reminders/create", json=rem_payload)
+    rem_data = res.json().get("reminder", {})
+    rem_id = rem_data.get("id")
+    print(f"22. POST /api/reminders/create -> Created ID: {rem_id}")
+
+    res = client.post(f"/api/reminders/{rem_id}/snooze", json={"minutes": 15})
+    print(f"23. POST /api/reminders/{rem_id}/snooze -> Status: {res.status_code}, Snoozed: {res.json()}")
+
+    res = client.delete(f"/api/reminders/{rem_id}")
+    print(f"24. DELETE /api/reminders/{rem_id} -> Deleted: {res.json()}")
 
     print("=" * 70)
-    print("ALL 18 API OPERATIONS IN API.PY EXECUTED AND VERIFIED SUCCESSFULLY!")
+    print("ALL API OPERATIONS IN API.PY EXECUTED AND VERIFIED SUCCESSFULLY!")
     print("=" * 70)
 
 

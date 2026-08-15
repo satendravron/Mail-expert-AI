@@ -6,8 +6,8 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body {
-      width: 360px;
-      max-height: 520px;
+      width: 380px;
+      max-height: 560px;
       overflow-y: auto;
       background: #0b0f19;
       color: #f8fafc;
@@ -17,7 +17,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       padding-bottom: 8px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
@@ -35,6 +35,94 @@
     }
     .dashboard-link:hover { background: rgba(56, 189, 248, 0.2); }
     
+    /* Account Controls */
+    .auth-bar {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-bottom: 10px;
+      font-size: 11px;
+    }
+    .auth-status {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: 600;
+      color: #94a3b8;
+    }
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #ef4444;
+      display: inline-block;
+    }
+    .dot.connected { background: #10b981; box-shadow: 0 0 6px #10b981; }
+
+    .btn {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-login { background: #0284c7; color: #fff; }
+    .btn-login:hover { background: #0369a1; }
+    .btn-logout { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .btn-logout:hover { background: rgba(239, 68, 68, 0.3); }
+
+    .account-switcher-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.08);
+    }
+    .account-select {
+      flex: 1;
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 6px;
+      padding: 4px 6px;
+      font-size: 11px;
+      outline: none;
+    }
+
+    /* Notification & Alarm Bar */
+    .notification-bar {
+      display: none;
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(245, 158, 11, 0.2));
+      border: 1px solid #f59e0b;
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-bottom: 10px;
+      animation: pulse-border 1.5s infinite alternate;
+    }
+    @keyframes pulse-border {
+      0% { border-color: #f59e0b; box-shadow: 0 0 4px rgba(245, 158, 11, 0.4); }
+      100% { border-color: #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.6); }
+    }
+    .alarm-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #fbbf24;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
     .card {
       background: rgba(21, 29, 48, 0.8);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -73,9 +161,37 @@
       <span class="logo">📬</span>
       <span class="brand-title">Mail Expert AI</span>
     </div>
-    <a href="http://127.0.0.1:8000/" target="_blank" class="dashboard-link">Open Dashboard ↗</a>
+    <a href="http://127.0.0.1:8000/" target="_blank" class="dashboard-link">Dashboard ↗</a>
   </div>
+
+  <!-- Account & Auth Control Bar -->
+  <div class="auth-bar">
+    <div class="auth-status">
+      <div class="status-badge">
+        <span id="auth-dot" class="dot"></span>
+        <span id="auth-email">Checking status...</span>
+      </div>
+      <div id="auth-action-btn-container"></div>
+    </div>
+    <div class="account-switcher-row">
+      <span style="color: #94a3b8;">Account:</span>
+      <select id="account-select" class="account-select">
+        <option value="default">Primary Account (Gmail)</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Reminder Alarm & Notification Bar Banner -->
+  <div id="notification-bar" class="notification-bar">
+    <div class="alarm-title">
+      <span>⏰ DEADLINE ALARM DUE</span>
+      <button id="btn-mute" style="background:none; border:none; color:#fbbf24; cursor:pointer; font-size:12px;">🔊 Sound On</button>
+    </div>
+    <div id="notification-content" style="font-size: 11px; color: #f8fafc;"></div>
+  </div>
+
   <div id="content">Loading priority emails...</div>
   <script src="popup.js"></script>
 </body>
 </html>
+

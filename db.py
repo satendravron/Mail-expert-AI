@@ -89,6 +89,18 @@ def get_conn():
         conn.close()
 
 
+def seed_if_empty():
+    """Automatically populates sample emails if database is completely empty."""
+    with get_conn() as conn:
+        count = conn.execute("SELECT COUNT(*) FROM emails").fetchone()[0]
+    if count == 0:
+        try:
+            import seed_sample_emails
+            seed_sample_emails.seed()
+        except Exception as err:
+            print(f"[db] Warning: Auto-seed failed: {err}")
+
+
 def init_db():
     with get_conn() as conn:
         conn.executescript(SCHEMA)
@@ -100,6 +112,7 @@ def init_db():
             conn.execute("ALTER TABLE emails ADD COLUMN action_items TEXT DEFAULT '[]'")
         if "account_label" not in cols:
             conn.execute("ALTER TABLE emails ADD COLUMN account_label TEXT DEFAULT 'Primary Account'")
+    seed_if_empty()
 
 
 def upsert_email(email: Email):
@@ -334,11 +347,72 @@ def dismiss_reminder(reminder_id: str):
         conn.execute("UPDATE reminders SET status = 'dismissed' WHERE id = ?", (reminder_id,))
 
 
+def snooze_reminder(reminder_id: str, minutes: int = 15) -> bool:
+    with get_conn() as conn:
+        row = conn.execute("SELECT due_at FROM reminders WHERE id = ?", (reminder_id,)).fetchone()
+        if not row:
+            return False
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        new_due = now + timedelta(minutes=minutes)
+        conn.execute(
+            "UPDATE reminders SET due_at = ?, notified_offsets = '[]', status = 'pending' WHERE id = ?",
+            (new_due.isoformat(), reminder_id)
+        )
+    return True
+
+
+def delete_reminder(reminder_id: str) -> bool:
+    with get_conn() as conn:
+        conn.execute("DELETE FROM reminders WHERE id = ?", (reminder_id,))
+    return True
+
+
+def create_custom_reminder(
+    user_id: str,
+    title: str,
+    due_at: str,
+    email_id: str = "custom",
+    notify_offsets_minutes: Optional[List[int]] = None,
+    channels: Optional[List[str]] = None,
+) -> dict:
+    import uuid
+    reminder_id = f"rem_custom_{uuid.uuid4().hex[:8]}"
+    offsets = notify_offsets_minutes if notify_offsets_minutes is not None else [1440, 60, 15, 0]
+    chans = channels or ["desktop", "sound", "push"]
+    
+    with get_conn() as conn:
+        conn.execute("""
+            INSERT INTO reminders (id, email_id, user_id, title, due_at, notify_offsets_minutes, channels, notified_offsets, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, '[]', 'pending')
+        """, (reminder_id, email_id, user_id, title, due_at, json.dumps(offsets), json.dumps(chans)))
+    
+    return {
+        "id": reminder_id,
+        "email_id": email_id,
+        "user_id": user_id,
+        "title": title,
+        "due_at": due_at,
+        "notify_offsets_minutes": offsets,
+        "channels": chans,
+        "status": "pending"
+    }
+
+
 def get_upcoming_reminders(user_id: str) -> List[dict]:
     """For the agenda view — all pending reminders, soonest first."""
     with get_conn() as conn:
         rows = conn.execute(
             "SELECT * FROM reminders WHERE user_id = ? AND status = 'pending' ORDER BY due_at ASC",
+            (user_id,),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_all_reminders(user_id: str) -> List[dict]:
+    """Fetch all reminders (pending, dismissed, snoozed) for management view."""
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT * FROM reminders WHERE user_id = ? ORDER BY due_at ASC",
             (user_id,),
         ).fetchall()
     return [dict(r) for r in rows]
@@ -402,6 +476,12 @@ def upsert_account(account_id: str, user_id: str, account_name: str, provider: s
 def delete_account(account_id: str):
     with get_conn() as conn:
         conn.execute("DELETE FROM accounts WHERE id = ?", (account_id,))
+
+
+def set_active_account(account_id: str, user_id: str = "local_user"):
+    with get_conn() as conn:
+        conn.execute("UPDATE accounts SET is_active = 0 WHERE user_id = ?", (user_id,))
+        conn.execute("UPDATE accounts SET is_active = 1 WHERE id = ? AND user_id = ?", (account_id, user_id))
 
 
 def get_preferences_model(user_id: str) -> "Preferences":
