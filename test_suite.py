@@ -210,7 +210,29 @@ class TestDatabaseLayer(unittest.TestCase):
         db.create_reminders_for_email(email)
         upcoming = db.get_upcoming_reminders("test_db_user")
         self.assertGreaterEqual(len(upcoming), 1)
+        rem_id = upcoming[0]["id"]
         self.assertEqual(upcoming[0]["email_id"], "db_e3")
+
+        # Test 1: Dismissing reminder updates status to 'dismissed'
+        db.dismiss_reminder(rem_id)
+        pending_after = db.get_upcoming_reminders("test_db_user")
+        self.assertEqual(len([r for r in pending_after if r["id"] == rem_id]), 0)
+
+        # Test 2: Re-running auto-extracted reminders does NOT resurrect dismissed alarm
+        db.create_reminders_for_email(email)
+        pending_retest = db.get_upcoming_reminders("test_db_user")
+        self.assertEqual(len([r for r in pending_retest if r["id"] == rem_id]), 0)
+
+        # Test 3: Explicitly setting an alarm for this email re-activates reminder status to pending
+        reactivated = db.create_custom_reminder(
+            user_id="test_db_user",
+            title="Follow up: Explicit alarm set",
+            due_at=(now_time + timedelta(days=3)).isoformat(),
+            email_id="db_e3"
+        )
+        self.assertEqual(reactivated["status"], "pending")
+        pending_final = db.get_upcoming_reminders("test_db_user")
+        self.assertGreaterEqual(len([r for r in pending_final if r["email_id"] == "db_e3"]), 1)
 
 
 class TestFastAPIEndpoints(unittest.TestCase):
@@ -384,6 +406,283 @@ class TestMultiInboxConnector(unittest.TestCase):
         db_emails = db.get_all_emails("test_multi_user", account_filter="College Gmail")
         self.assertEqual(len(db_emails), 1)
         self.assertEqual(db_emails[0]["account_label"], "College Gmail")
+
+        # Test account deletion removes account and associated emails/reminders
+        acc_id = reg["account_id"]
+        connector.delete_account(acc_id)
+        accs_after = db.get_user_accounts("test_multi_user")
+        self.assertFalse(any(a["id"] == acc_id for a in accs_after))
+        db_emails_after = db.get_all_emails("test_multi_user", account_filter="College Gmail")
+        self.assertEqual(len(db_emails_after), 0)
+
+
+class TestGmailLogoutAndCleanup(unittest.TestCase):
+    def setUp(self):
+        db.init_db()
+        db.delete_all("test_logout_user")
+
+    def test_logout_gmail_clears_emails_and_reminders(self):
+        import gmail_connector
+        # Create a Gmail email and a non-Gmail email
+        gmail_email = Email(
+            id="gmail_test_1",
+            user_id="test_logout_user",
+            source="gmail",
+            sender="boss@company.com",
+            subject="Project update deadline July 20",
+            body="Please update by July 20, 2026",
+            received_at=FIXED_NOW,
+            extracted_dates=[ExtractedDate(label="Deadline", datetime_utc=datetime(2026, 7, 20, 10, 0, 0), confidence=0.9, raw_text="July 20")]
+        )
+        other_email = Email(
+            id="manual_test_1",
+            user_id="test_logout_user",
+            source="manual",
+            sender="friend@hobby.com",
+            subject="Weekend plans",
+            body="Let us meet on Saturday",
+            received_at=FIXED_NOW
+        )
+        db.upsert_email(gmail_email)
+        db.create_reminders_for_email(gmail_email)
+        db.upsert_email(other_email)
+
+        # Confirm inserted
+        self.assertEqual(len(db.get_all_emails("test_logout_user")), 2)
+
+        # Perform logout for test_logout_user
+        success = gmail_connector.logout_gmail(user_id="test_logout_user", clear_emails=True)
+        self.assertTrue(success)
+
+        # Confirm all emails and reminders are cleared after logout
+        remaining = db.get_all_emails("test_logout_user")
+        self.assertEqual(len(remaining), 0)
+
+    def test_auth_logout_api_endpoint(self):
+        client = TestClient(app)
+        res = client.post("/auth/logout?user_id=test_logout_user")
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertEqual(data["status"], "success")
+        self.assertFalse(data["connected"])
+
+
+class TestDirectOutboundEmailSending(unittest.TestCase):
+    def setUp(self):
+        db.init_db()
+        db.delete_all("test_send_user")
+        self.email = Email(
+            id="send_test_1",
+            user_id="test_send_user",
+            source="mock",
+            sender="interviewer@company.com",
+            subject="Interview Invitation",
+            body="Please confirm your availability for tomorrow.",
+            received_at=FIXED_NOW
+        )
+        db.upsert_email(self.email)
+
+    def test_send_reply_api_endpoint(self):
+        client = TestClient(app)
+        payload = {
+            "email_id": "send_test_1",
+            "recipient": "interviewer@company.com",
+            "subject": "Re: Interview Invitation",
+            "body": "I confirm my availability. Thank you!",
+            "intent": "confirm"
+        }
+        res = client.post("/emails/send_test_1/send-reply", json=payload)
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertEqual(data["status"], "success")
+        self.assertEqual(data["email_id"], "send_test_1")
+
+        # Verify DB status updated
+        e = db.get_email_by_id("send_test_1")
+        self.assertTrue(e["is_replied"])
+        self.assertIsNotNone(e["reply_sent_at"])
+
+
+class TestAnalyticsEndpoint(unittest.TestCase):
+    def setUp(self):
+        db.init_db()
+
+    def test_analytics_api(self):
+        client = TestClient(app)
+        res = client.get("/api/analytics?user_id=local_user")
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertEqual(data["status"], "success")
+        self.assertIn("total_count", data)
+        self.assertIn("priority_distribution", data)
+        self.assertIn("category_distribution", data)
+        self.assertIn("top_senders", data)
+        self.assertIn("upcoming_deadlines", data)
+
+
+class TestWebSocketAndWebhooks(unittest.TestCase):
+    def setUp(self):
+        db.init_db()
+
+    def test_incoming_webhook_endpoint(self):
+        client = TestClient(app)
+        payload = {
+            "id": "wh_test_1",
+            "sender": "webhook_sender@company.com",
+            "subject": "URGENT: Webhook Project Deadline",
+            "body": "Please complete by tomorrow evening.",
+            "source": "webhook"
+        }
+        res = client.post("/api/webhooks/incoming", json=payload)
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertEqual(data["status"], "success")
+        self.assertEqual(data["email_id"], "wh_test_1")
+
+        e = db.get_email_by_id("wh_test_1")
+        self.assertIsNotNone(e)
+        self.assertEqual(e["subject"], "URGENT: Webhook Project Deadline")
+
+    def test_websocket_connection(self):
+        client = TestClient(app)
+        with client.websocket_connect("/ws/inbox") as websocket:
+            websocket.send_text("ping")
+
+
+class TestMultiUserAuth(unittest.TestCase):
+    def setUp(self):
+        db.init_db()
+
+    def test_user_registration_and_login(self):
+        import uuid
+        test_email = f"user_{uuid.uuid4().hex[:6]}@example.com"
+        client = TestClient(app)
+        reg_payload = {
+            "email": test_email,
+            "password": "SecurePassword123!",
+            "full_name": "Test User"
+        }
+        res = client.post("/api/auth/register", json=reg_payload)
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertIn("access_token", data)
+        self.assertEqual(data["email"], test_email)
+        self.assertEqual(data["full_name"], "Test User")
+
+        # Test duplicate registration fails
+        res_dup = client.post("/api/auth/register", json=reg_payload)
+        self.assertEqual(res_dup.status_code, 400)
+
+        # Test Login
+        login_payload = {
+            "email": test_email,
+            "password": "SecurePassword123!"
+        }
+        res_login = client.post("/api/auth/login", json=login_payload)
+        self.assertEqual(res_login.status_code, 200)
+        login_data = res_login.json()
+        self.assertIn("access_token", login_data)
+
+        # Test protected profile endpoint /api/auth/me
+        token = login_data["access_token"]
+        res_me = client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
+        self.assertEqual(res_me.status_code, 200)
+        me_data = res_me.json()
+        self.assertTrue(me_data["is_authenticated"])
+        self.assertEqual(me_data["email"], test_email)
+
+
+class TestExportImportBackupEngine(unittest.TestCase):
+    def setUp(self):
+        db.init_db()
+
+    def test_export_json_and_csv(self):
+        client = TestClient(app)
+
+        # Test JSON Export
+        res_json = client.get("/api/backup/export?format=json")
+        self.assertEqual(res_json.status_code, 200)
+        self.assertIn("application/json", res_json.headers.get("content-type", ""))
+        backup_dict = res_json.json()
+        self.assertEqual(backup_dict["app"], "Mail Expert AI")
+        self.assertIn("emails", backup_dict)
+        self.assertIn("reminders", backup_dict)
+
+        # Test CSV Export
+        res_csv = client.get("/api/backup/export?format=csv")
+        self.assertEqual(res_csv.status_code, 200)
+        self.assertIn("text/csv", res_csv.headers.get("content-type", ""))
+        csv_text = res_csv.text
+        self.assertIn("id,sender,subject", csv_text)
+
+    def test_import_backup_restoration(self):
+        client = TestClient(app)
+        sample_backup = {
+            "version": "1.0",
+            "app": "Mail Expert AI",
+            "user_id": "test_backup_user",
+            "emails": [
+                {
+                    "id": "bkp_email_101",
+                    "subject": "Restored Backup Subject",
+                    "sender": "backup@company.com",
+                    "body": "Restored contents from backup file.",
+                    "importance": "high",
+                    "importance_score": 0.95
+                }
+            ],
+            "reminders": [
+                {
+                    "id": "bkp_rem_101",
+                    "title": "Restored Follow Up",
+                    "due_at": "2026-08-20T10:00:00Z"
+                }
+            ]
+        }
+        res = client.post("/api/backup/import", json=sample_backup)
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertEqual(data["status"], "success")
+        self.assertEqual(data["restored_emails"], 1)
+
+        # Verify email exists in DB
+        restored = db.get_email_by_id("bkp_email_101")
+        self.assertIsNotNone(restored)
+        self.assertEqual(restored["subject"], "Restored Backup Subject")
+
+
+class TestAutoTaggingEngine(unittest.TestCase):
+    def test_detect_tags_function(self):
+        from importance_engine import detect_tags
+        tags1 = detect_tags("URGENT: Please confirm project deadline", "Action required ASAP by end of day.")
+        self.assertIn("🏷️ Action Needed", tags1)
+
+        tags2 = detect_tags("Interview Shortlist Confirmation", "You have been shortlisted for recruiter call.")
+        self.assertIn("💼 Interview", tags2)
+
+        tags3 = detect_tags("Monthly Subscription Invoice", "Payment receipt attached for your billing record.")
+        self.assertIn("💳 Financial", tags3)
+
+        tags4 = detect_tags("Security Alert: Password Reset", "Unauthorized login attempt detected from new IP.")
+        self.assertIn("⚠️ Security", tags4)
+
+    def test_classification_attaches_tags(self):
+        from models import Email, Preferences
+        from importance_engine import classify_email
+
+        from datetime import datetime, timezone
+        email = Email(
+            id="tag_test_001",
+            user_id="local_user",
+            source="test",
+            sender="hr@company.com",
+            subject="Job Interview Shortlist & Schedule Call",
+            body="We would like to invite you for an interview.",
+            received_at=datetime.now(timezone.utc)
+        )
+        prefs = Preferences(user_id="local_user")
+        classified = classify_email(email, prefs)
+        self.assertIn("💼 Interview", classified.tags)
 
 
 if __name__ == "__main__":

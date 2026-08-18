@@ -28,6 +28,9 @@ def test_operations(mock_gmail_main):
     res = client.get("/health")
     print(f"\n1. GET /health -> Status: {res.status_code}, Body: {res.json()}")
 
+    # Seed sample emails first to ensure test data exists
+    client.post("/api/seed")
+
     # 2. Get Inbox
     res = client.get("/inbox")
     emails = res.json()

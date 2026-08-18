@@ -66,6 +66,7 @@ async function logoutGmail() {
     alert(data.message || "Logged out from Gmail.");
     checkAuthStatus();
     loadInbox();
+    loadAccounts();
   } catch (err) {
     alert(`Logout failed: ${err.message}`);
   }

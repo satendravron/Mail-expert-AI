@@ -39,13 +39,14 @@ from models import Email, Preferences
 from importance_engine import classify_email
 import db
 
-# Read-only scope: this app can NEVER send, delete, or modify your mail —
-# only read it. This matches the "opt-in, read-only" privacy stance from
-# the product plan.
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+SCOPES = [
+    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/gmail.send"
+]
 
-CREDENTIALS_FILE = "credentials.json"
-TOKEN_FILE = "token.json"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CREDENTIALS_FILE = os.path.join(BASE_DIR, "credentials.json")
+TOKEN_FILE = os.path.join(BASE_DIR, "token.json")
 MAX_EMAILS_TO_FETCH = 15
 
 
@@ -79,16 +80,23 @@ def is_gmail_authenticated() -> tuple[bool, str | None]:
     return False, None
 
 
-def logout_gmail() -> bool:
-    """Logs out of Gmail by removing the token.json file."""
+def logout_gmail(user_id: str = "local_user", clear_emails: bool = True) -> bool:
+    """Logs out of Gmail by removing token.json and clearing Gmail emails from DB."""
+    success = True
     if os.path.exists(TOKEN_FILE):
         try:
             os.remove(TOKEN_FILE)
-            return True
         except Exception as e:
             print(f"[warn] Could not remove token file: {e}")
-            return False
-    return True
+            success = False
+
+    if clear_emails:
+        try:
+            db.delete_all_emails_and_reminders(user_id=user_id)
+        except Exception as e:
+            print(f"[warn] Could not clear emails: {e}")
+
+    return success
 
 
 
@@ -270,6 +278,55 @@ def sync_gmail_emails(user_id: str = "local_user", allow_local_server: bool = Fa
         }
     except Exception as err:
         return {"status": "error", "message": str(err)}
+
+
+def send_gmail_message(service, recipient: str, subject: str, body: str, thread_id: str | None = None) -> dict:
+    """Sends an email reply using the authenticated Gmail API client."""
+    from email.mime.text import MIMEText
+    import base64
+
+    message = MIMEText(body)
+    message["to"] = recipient
+    message["subject"] = subject
+
+    raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode("utf-8")
+    send_body = {"raw": raw_message}
+    if thread_id:
+        send_body["threadId"] = thread_id
+
+    sent_msg = service.users().messages().send(userId="me", body=send_body).execute()
+    return {
+        "status": "success",
+        "message_id": sent_msg.get("id"),
+        "thread_id": sent_msg.get("threadId"),
+        "transport": "gmail_api"
+    }
+
+
+def send_smtp_message(recipient: str, subject: str, body: str, smtp_host: str = "smtp.gmail.com", smtp_port: int = 587, username: str | None = None, password: str | None = None) -> dict:
+    """Sends an email reply via SMTP, or logs a mock transport send when no credentials exist."""
+    from email.mime.text import MIMEText
+    import smtplib
+
+    msg = MIMEText(body)
+    msg["Subject"] = subject
+    msg["From"] = username or "me@local.app"
+    msg["To"] = recipient
+
+    if username and password:
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
+            server.starttls()
+            server.login(username, password)
+            server.send_message(msg)
+        transport_type = "smtp"
+    else:
+        transport_type = "mock_smtp"
+
+    return {
+        "status": "success",
+        "transport": transport_type,
+        "recipient": recipient
+    }
 
 
 def main():

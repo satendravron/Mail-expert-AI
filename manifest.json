@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Mail Expert AI",
-  "version": "1.0",
-  "description": "Shows your classified inbox (High/Medium/Low priority) and deadline alarms from your local Mail Expert AI server.",
+  "version": "1.2",
+  "description": "Smart email triage & deadline manager. Injects priority badges, AI summaries, and smart reply actions into Gmail.",
   "action": {
     "default_popup": "popup.html",
     "default_title": "Mail Expert AI — Priority & Alarm Center"
@@ -12,7 +12,16 @@
     "storage"
   ],
   "host_permissions": [
-    "http://127.0.0.1:8000/*"
+    "http://127.0.0.1:8000/*",
+    "https://mail.google.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "css": ["content_style.css"],
+      "js": ["content_script.js"],
+      "run_at": "document_idle"
+    }
   ],
   "icons": {
     "48": "icon48.png"

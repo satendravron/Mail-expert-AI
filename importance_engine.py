@@ -213,8 +213,31 @@ def classify_email(email: Email, prefs: Preferences, now: datetime | None = None
         "matched_low_signal_patterns": low_hits,
     }
     email.importance = _tier_from_score(final_score, prefs)
+    if not email.tags:
+        email.tags = detect_tags(email.subject, email.body)
     enrich_email_with_llm(email)
     return email
+
+
+TAG_PATTERNS: Dict[str, List[str]] = {
+    "🏷️ Action Needed": [r"\burgent\b", r"\baction\s+required\b", r"\bplease\s+confirm\b", r"\bdeadline\b", r"\basap\b", r"\breview\s+needed\b"],
+    "💼 Interview": [r"\binterview\b", r"\brecruiter\b", r"\bjob\s+offer\b", r"\bshortlisted?\b", r"\bapplication\b", r"\bhiring\b"],
+    "💳 Financial": [r"\binvoice\b", r"\breceipt\b", r"\bpayment\b", r"\bsubscription\b", r"\bbilling\b", r"\btax\b"],
+    "🚀 Project": [r"\brelease\b", r"\bsprint\b", r"\bmilestone\b", r"\bdeploy\b", r"\bbuild\s+update\b"],
+    "⚠️ Security": [r"\bsecurity\s+alert\b", r"\bpassword\s+reset\b", r"\bunauthorized\b", r"\bverification\s+code\b", r"\blogin\s+attempt\b"]
+}
+
+
+def detect_tags(subject: str, body: str) -> List[str]:
+    """Auto-detects semantic workflow tags from email subject and body text."""
+    text = f"{subject} {body}".lower()
+    tags = []
+    for tag_name, patterns in TAG_PATTERNS.items():
+        for pat in patterns:
+            if re.search(pat, text):
+                tags.append(tag_name)
+                break
+    return tags
 
 
 def batch_classify(emails: List[Email], prefs: Preferences, now: datetime | None = None) -> List[Email]:

@@ -48,7 +48,7 @@ class MultiInboxConnector:
         return accounts
 
     def delete_account(self, account_id: str):
-        db.delete_account(account_id)
+        db.delete_account(account_id, self.user_id)
 
     def ingest_emails_for_account(self, account_name: str, raw_emails: List[dict]) -> List[Email]:
         """

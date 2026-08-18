@@ -95,9 +95,10 @@ python start_app.py
 
 ---
 
-## 🧩 Chrome Extension Setup
+## 🧩 Chrome Extension & In-Gmail Overlay Setup
 
 1. Open Chrome and navigate to `chrome://extensions/`.
 2. Enable **Developer mode** (toggle in the top-right corner).
 3. Click **Load unpacked** and select this project directory.
-4. Click the Mail Expert AI icon in your browser bar while `api.py` or `start_app.py` is running to view top unread priority emails.
+4. **Toolbar Popup**: Click the Mail Expert AI icon in your browser bar while `start_app.py` is running to view unread priority emails and deadline alarms.
+5. **In-Gmail Live Overlay**: Open [https://mail.google.com/](https://mail.google.com/). Inline `HIGH`, `MEDIUM`, and `LOW` priority badges with AI executive summary tooltips and 1-click **✍️ Smart Reply** actions will automatically overlay onto your Gmail inbox rows!

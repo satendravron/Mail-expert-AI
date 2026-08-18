@@ -36,7 +36,10 @@ CREATE TABLE IF NOT EXISTS emails (
     summary TEXT,
     action_items TEXT DEFAULT '[]',
     user_override TEXT,
-    is_read INTEGER DEFAULT 0
+    is_read INTEGER DEFAULT 0,
+    account_label TEXT DEFAULT 'Primary Account',
+    is_replied INTEGER DEFAULT 0,
+    reply_sent_at TEXT
 );
 
 CREATE TABLE IF NOT EXISTS reminders (
@@ -75,6 +78,14 @@ CREATE TABLE IF NOT EXISTS accounts (
     is_active INTEGER DEFAULT 1,
     last_synced_at TEXT
 );
+
+CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    hashed_password TEXT NOT NULL,
+    full_name TEXT,
+    created_at TEXT NOT NULL
+);
 """
 
 
@@ -103,7 +114,14 @@ def seed_if_empty():
 
 def init_db():
     with get_conn() as conn:
+        conn.execute("PRAGMA journal_mode=WAL;")
+        conn.execute("PRAGMA synchronous=NORMAL;")
         conn.executescript(SCHEMA)
+        # Performance indexes for fast querying
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_reminders_status_due ON reminders(status, due_at);")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_reminders_user_id ON reminders(user_id);")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_emails_user_id ON emails(user_id);")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_emails_importance ON emails(importance);")
         # Handle lightweight schema migration for existing databases
         cols = [r["name"] for r in conn.execute("PRAGMA table_info(emails)").fetchall()]
         if "summary" not in cols:
@@ -112,7 +130,17 @@ def init_db():
             conn.execute("ALTER TABLE emails ADD COLUMN action_items TEXT DEFAULT '[]'")
         if "account_label" not in cols:
             conn.execute("ALTER TABLE emails ADD COLUMN account_label TEXT DEFAULT 'Primary Account'")
-    seed_if_empty()
+        if "is_replied" not in cols:
+            conn.execute("ALTER TABLE emails ADD COLUMN is_replied INTEGER DEFAULT 0")
+        if "reply_sent_at" not in cols:
+            conn.execute("ALTER TABLE emails ADD COLUMN reply_sent_at TEXT")
+
+
+def delete_all_emails_and_reminders(user_id: str = "local_user"):
+    """Deletes all emails and reminders for a user (used during logout)."""
+    with get_conn() as conn:
+        conn.execute("DELETE FROM reminders WHERE user_id = ?", (user_id,))
+        conn.execute("DELETE FROM emails WHERE user_id = ?", (user_id,))
 
 
 def upsert_email(email: Email):
@@ -123,6 +151,10 @@ def upsert_email(email: Email):
     with get_conn() as conn:
         existing = conn.execute("SELECT id FROM emails WHERE id = ?", (email.id,)).fetchone()
         account_lbl = getattr(email, "account_label", "Primary Account") or "Primary Account"
+        is_rep = int(getattr(email, "is_replied", False) or False)
+        rep_at = getattr(email, "reply_sent_at", None)
+        rep_at_str = rep_at.isoformat() if isinstance(rep_at, datetime) else rep_at
+
         if existing:
             conn.execute("""
                 UPDATE emails SET
@@ -146,8 +178,8 @@ def upsert_email(email: Email):
                 INSERT INTO emails
                 (id, user_id, source, sender, subject, body, received_at,
                  category, importance, importance_score, score_breakdown,
-                 extracted_dates, tags, summary, action_items, user_override, is_read, account_label)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 extracted_dates, tags, summary, action_items, user_override, is_read, account_label, is_replied, reply_sent_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 email.id, email.user_id, email.source, email.sender,
                 email.subject, email.body, email.received_at.isoformat(),
@@ -162,6 +194,8 @@ def upsert_email(email: Email):
                 email.user_override,
                 int(email.is_read),
                 account_lbl,
+                is_rep,
+                rep_at_str,
             ))
 
 
@@ -189,6 +223,8 @@ def get_all_emails(user_id: str, importance_filter: Optional[str] = None, accoun
         d["tags"] = json.loads(d["tags"] or "[]")
         d["action_items"] = json.loads(d.get("action_items") or "[]")
         d["is_read"] = bool(d["is_read"])
+        d["is_replied"] = bool(d.get("is_replied", 0))
+        d["reply_sent_at"] = d.get("reply_sent_at")
         d["account_label"] = d.get("account_label") or "Primary Account"
         results.append(d)
     return results
@@ -197,6 +233,12 @@ def get_all_emails(user_id: str, importance_filter: Optional[str] = None, accoun
 def mark_read(email_id: str, is_read: bool = True):
     with get_conn() as conn:
         conn.execute("UPDATE emails SET is_read = ? WHERE id = ?", (int(is_read), email_id))
+
+
+def mark_email_replied(email_id: str, sent_at: Optional[datetime] = None):
+    dt_str = (sent_at or datetime.now(timezone.utc)).isoformat()
+    with get_conn() as conn:
+        conn.execute("UPDATE emails SET is_replied = 1, reply_sent_at = ? WHERE id = ?", (dt_str, email_id))
 
 
 def set_user_override(email_id: str, importance: str):
@@ -236,6 +278,8 @@ def get_email_by_id(email_id: str) -> Optional[dict]:
         d["tags"] = json.loads(d["tags"] or "[]")
         d["action_items"] = json.loads(d.get("action_items") or "[]")
         d["is_read"] = bool(d["is_read"])
+        d["is_replied"] = bool(d.get("is_replied", 0))
+        d["reply_sent_at"] = d.get("reply_sent_at")
         return d
 
 
@@ -252,6 +296,17 @@ def delete_email(email_id: str):
     with get_conn() as conn:
         conn.execute("DELETE FROM emails WHERE id = ?", (email_id,))
         conn.execute("DELETE FROM reminders WHERE email_id = ?", (email_id,))
+
+
+def delete_emails_by_source(user_id: str, source: str):
+    """Deletes all emails and associated reminders for a specific source (e.g., 'gmail')."""
+    with get_conn() as conn:
+        rows = conn.execute("SELECT id FROM emails WHERE user_id = ? AND source = ?", (user_id, source)).fetchall()
+        email_ids = [r["id"] for r in rows]
+        if email_ids:
+            placeholders = ",".join("?" for _ in email_ids)
+            conn.execute(f"DELETE FROM reminders WHERE email_id IN ({placeholders})", email_ids)
+            conn.execute(f"DELETE FROM emails WHERE id IN ({placeholders})", email_ids)
 
 
 def delete_all(user_id: str):
@@ -344,7 +399,12 @@ def mark_offset_notified(reminder_id: str, offset_minutes: int):
 
 def dismiss_reminder(reminder_id: str):
     with get_conn() as conn:
-        conn.execute("UPDATE reminders SET status = 'dismissed' WHERE id = ?", (reminder_id,))
+        row = conn.execute("SELECT notify_offsets_minutes FROM reminders WHERE id = ?", (reminder_id,)).fetchone()
+        offsets_str = row["notify_offsets_minutes"] if row else '[1440, 60, 15, 0]'
+        conn.execute(
+            "UPDATE reminders SET status = 'dismissed', notified_offsets = ? WHERE id = ?",
+            (offsets_str, reminder_id)
+        )
 
 
 def snooze_reminder(reminder_id: str, minutes: int = 15) -> bool:
@@ -376,11 +436,30 @@ def create_custom_reminder(
     channels: Optional[List[str]] = None,
 ) -> dict:
     import uuid
-    reminder_id = f"rem_custom_{uuid.uuid4().hex[:8]}"
     offsets = notify_offsets_minutes if notify_offsets_minutes is not None else [1440, 60, 15, 0]
     chans = channels or ["desktop", "sound", "push"]
     
     with get_conn() as conn:
+        if email_id != "custom":
+            existing = conn.execute("SELECT id FROM reminders WHERE email_id = ? AND user_id = ?", (email_id, user_id)).fetchone()
+            if existing:
+                reminder_id = existing["id"]
+                conn.execute("""
+                    UPDATE reminders SET title = ?, due_at = ?, notify_offsets_minutes = ?, channels = ?, notified_offsets = '[]', status = 'pending'
+                    WHERE id = ?
+                """, (title, due_at, json.dumps(offsets), json.dumps(chans), reminder_id))
+                return {
+                    "id": reminder_id,
+                    "email_id": email_id,
+                    "user_id": user_id,
+                    "title": title,
+                    "due_at": due_at,
+                    "notify_offsets_minutes": offsets,
+                    "channels": chans,
+                    "status": "pending"
+                }
+
+        reminder_id = f"rem_custom_{uuid.uuid4().hex[:8]}"
         conn.execute("""
             INSERT INTO reminders (id, email_id, user_id, title, due_at, notify_offsets_minutes, channels, notified_offsets, status)
             VALUES (?, ?, ?, ?, ?, ?, ?, '[]', 'pending')
@@ -473,9 +552,23 @@ def upsert_account(account_id: str, user_id: str, account_name: str, provider: s
         """, (account_id, user_id, account_name, provider, email_address, datetime.now(timezone.utc).isoformat()))
 
 
-def delete_account(account_id: str):
+def delete_account(account_id: str, user_id: str = "local_user"):
+    """Deletes an account and all emails & reminders associated with it."""
     with get_conn() as conn:
-        conn.execute("DELETE FROM accounts WHERE id = ?", (account_id,))
+        acc = conn.execute("SELECT * FROM accounts WHERE id = ? AND user_id = ?", (account_id, user_id)).fetchone()
+        if acc:
+            acc_name = acc["account_name"]
+            provider = acc["provider"]
+            rows = conn.execute(
+                "SELECT id FROM emails WHERE user_id = ? AND (account_label = ? OR source = ?)",
+                (user_id, acc_name, provider)
+            ).fetchall()
+            email_ids = [r["id"] for r in rows]
+            if email_ids:
+                placeholders = ",".join("?" for _ in email_ids)
+                conn.execute(f"DELETE FROM reminders WHERE email_id IN ({placeholders})", email_ids)
+                conn.execute(f"DELETE FROM emails WHERE id IN ({placeholders})", email_ids)
+        conn.execute("DELETE FROM accounts WHERE id = ? AND user_id = ?", (account_id, user_id))
 
 
 def set_active_account(account_id: str, user_id: str = "local_user"):
@@ -490,3 +583,163 @@ def get_preferences_model(user_id: str) -> "Preferences":
     persisted preferences and classify_email()."""
     from models import Preferences  # local import to avoid a circular import at module load time
     return Preferences(user_id=user_id, **get_preferences_dict(user_id))
+
+
+def hash_password(password: str) -> str:
+    import hashlib
+    import secrets
+    salt = secrets.token_hex(16)
+    pwd_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000).hex()
+    return f"{salt}${pwd_hash}"
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    import hashlib
+    import secrets
+    try:
+        salt, stored_hash = hashed_password.split('$')
+        pwd_hash = hashlib.pbkdf2_hmac('sha256', plain_password.encode('utf-8'), salt.encode('utf-8'), 100000).hex()
+        return secrets.compare_digest(pwd_hash, stored_hash)
+    except Exception:
+        return False
+
+
+def create_user(email: str, password: str, full_name: Optional[str] = None) -> dict:
+    import uuid
+    user_id = f"usr_{uuid.uuid4().hex[:10]}"
+    hashed_pwd = hash_password(password)
+    created_at = datetime.now(timezone.utc).isoformat()
+    clean_email = email.lower().strip()
+    with get_conn() as conn:
+        conn.execute(
+            "INSERT INTO users (id, email, hashed_password, full_name, created_at) VALUES (?, ?, ?, ?, ?)",
+            (user_id, clean_email, hashed_pwd, full_name, created_at)
+        )
+    return {
+        "id": user_id,
+        "email": clean_email,
+        "full_name": full_name,
+        "created_at": created_at
+    }
+
+
+def get_user_by_email(email: str) -> Optional[dict]:
+    with get_conn() as conn:
+        row = conn.execute("SELECT * FROM users WHERE LOWER(email) = LOWER(?)", (email.strip(),)).fetchone()
+        return dict(row) if row else None
+
+
+def get_user_by_id(user_id: str) -> Optional[dict]:
+    with get_conn() as conn:
+        row = conn.execute("SELECT id, email, full_name, created_at FROM users WHERE id = ?", (user_id,)).fetchone()
+        return dict(row) if row else None
+
+
+def export_full_backup(user_id: str = "local_user") -> dict:
+    """Exports full database dump (emails, reminders, preferences, accounts) for backup."""
+    emails = get_all_emails(user_id)
+    reminders = get_all_reminders(user_id)
+    preferences = get_preferences_dict(user_id)
+    accounts = get_user_accounts(user_id)
+    override_logs = get_override_logs(user_id)
+
+    return {
+        "version": "1.0",
+        "app": "Mail Expert AI",
+        "exported_at": datetime.now(timezone.utc).isoformat(),
+        "user_id": user_id,
+        "emails": emails,
+        "reminders": reminders,
+        "preferences": preferences,
+        "accounts": accounts,
+        "override_logs": override_logs
+    }
+
+
+def import_full_backup(user_id: str = "local_user", backup_data: dict = None) -> dict:
+    """Restores emails, reminders, preferences, and accounts from a backup dict."""
+    if not backup_data or not isinstance(backup_data, dict):
+        raise ValueError("Invalid backup format: payload must be a JSON object.")
+
+    emails = backup_data.get("emails") or []
+    reminders = backup_data.get("reminders") or []
+    prefs = backup_data.get("preferences")
+    accounts = backup_data.get("accounts") or []
+
+    restored_emails = 0
+    restored_reminders = 0
+
+    if prefs and isinstance(prefs, dict):
+        save_preferences_dict(user_id, prefs)
+
+    for acc in accounts:
+        if isinstance(acc, dict) and "account_name" in acc:
+            upsert_account(
+                account_id=acc.get("id") or f"acc_{hash(acc.get('email_address', '')) & 0xffffffff}",
+                user_id=user_id,
+                account_name=acc["account_name"],
+                provider=acc.get("provider", "gmail"),
+                email_address=acc.get("email_address", "user@local.app")
+            )
+
+    for e in emails:
+        if isinstance(e, dict) and "id" in e and "subject" in e:
+            recv_at = e.get("received_at")
+            if isinstance(recv_at, str):
+                try:
+                    dt = datetime.fromisoformat(recv_at.replace("Z", "+00:00"))
+                except Exception:
+                    dt = datetime.now(timezone.utc)
+            elif isinstance(recv_at, datetime):
+                dt = recv_at
+            else:
+                dt = datetime.now(timezone.utc)
+
+            email_obj = Email(
+                id=e["id"],
+                user_id=user_id,
+                source=e.get("source", "backup"),
+                sender=e.get("sender", "unknown@domain.com"),
+                subject=e["subject"],
+                body=e.get("body", ""),
+                received_at=dt,
+                category=e.get("category", Category.UNCATEGORIZED),
+                importance=e.get("importance"),
+                importance_score=e.get("importance_score", 0.0),
+                score_breakdown=e.get("score_breakdown", {}),
+                extracted_dates=[ExtractedDate(**d) for d in (e.get("extracted_dates") or []) if isinstance(d, dict)],
+                tags=e.get("tags") or [],
+                summary=e.get("summary"),
+                action_items=e.get("action_items") or [],
+                user_override=e.get("user_override"),
+                is_read=e.get("is_read", False),
+                account_label=e.get("account_label", "Primary Account"),
+                is_replied=e.get("is_replied", False),
+                reply_sent_at=e.get("reply_sent_at")
+            )
+            upsert_email(email_obj)
+            restored_emails += 1
+
+    for r in reminders:
+        if isinstance(r, dict) and "id" in r and "title" in r:
+            with get_conn() as conn:
+                conn.execute("""
+                    INSERT OR REPLACE INTO reminders
+                    (id, email_id, user_id, title, due_at, notify_offsets_minutes, channels, notified_offsets, status)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    r["id"], r.get("email_id", "custom"), user_id, r["title"],
+                    r.get("due_at", datetime.now(timezone.utc).isoformat()),
+                    json.dumps(r.get("notify_offsets_minutes", [1440, 60])),
+                    json.dumps(r.get("channels", ["desktop"])),
+                    json.dumps(r.get("notified_offsets", [])),
+                    r.get("status", "pending")
+                ))
+                restored_reminders += 1
+
+    return {
+        "status": "success",
+        "restored_emails": restored_emails,
+        "restored_reminders": restored_reminders,
+        "restored_accounts": len(accounts)
+    }

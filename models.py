@@ -59,6 +59,49 @@ class Email(BaseModel):
     user_override: Optional[Importance] = None
     is_read: bool = False
     account_label: str = "Primary Account"
+    is_replied: bool = False
+    reply_sent_at: Optional[datetime] = None
+
+
+class SendReplyRequest(BaseModel):
+    email_id: str
+    recipient: str
+    subject: str
+    body: str
+    intent: str = "confirm"
+    smtp_host: Optional[str] = None
+    smtp_port: Optional[int] = 587
+    smtp_username: Optional[str] = None
+    smtp_password: Optional[str] = None
+
+
+class IncomingWebhookPayload(BaseModel):
+    id: Optional[str] = None
+    user_id: str = "local_user"
+    sender: str
+    subject: str
+    body: str
+    source: str = "webhook"
+    account_label: str = "Primary Account"
+
+
+class UserRegisterRequest(BaseModel):
+    email: str
+    password: str
+    full_name: Optional[str] = None
+
+
+class UserLoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user_id: str
+    email: str
+    full_name: Optional[str] = None
 
 
 class AccountConfig(BaseModel):
