@@ -41,12 +41,13 @@ Access the dashboard at `http://localhost:8000/`.
 
 ## 🧩 Option 4: Publish Chrome Extension
 
-1. Open a terminal in the project directory and zip the extension assets:
+1. The Chrome Extension package is pre-built in the repository as [`mail-expert-extension-v1.2.zip`](mail-expert-extension-v1.2.zip).
+   To manually re-package, run:
    ```bash
-   zip -r mail-expert-extension.zip manifest.json popup.html popup.js icon192.png
+   python -c "import zipfile, os; files=['manifest.json', 'popup.html', 'popup.js', 'content_script.js', 'content_style.css', 'icon48.png', 'icon192.png', 'icon512.png']; z=zipfile.ZipFile('mail-expert-extension-v1.2.zip', 'w'); [z.write(f) for f in files if os.path.exists(f)]; z.close()"
    ```
 2. Go to the [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole).
-3. Click **Add new item** and upload `mail-expert-extension.zip`.
+3. Click **Add new item** and upload `mail-expert-extension-v1.2.zip`.
 4. Fill in extension store listing details, screenshots, and submit for review.
 
 ---
