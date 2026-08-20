@@ -24,7 +24,7 @@ import os
 import sys
 import base64
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -236,7 +236,7 @@ def fetch_recent_emails(service, user_id: str, max_results: int = MAX_EMAILS_TO_
         sender_clean = sender_email_match.group(1) if sender_email_match else sender
 
         body = _decode_body(payload)
-        received_at = datetime.utcfromtimestamp(int(msg["internalDate"]) / 1000)
+        received_at = datetime.fromtimestamp(int(msg["internalDate"]) / 1000, timezone.utc)
 
         emails.append(Email(
             id=msg["id"],

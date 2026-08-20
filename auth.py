@@ -80,7 +80,7 @@ def get_current_user_id(request: Request) -> str:
 
 def get_authenticated_user_id(request: Request) -> Optional[str]:
     """
-    Extracts active user_id ONLY if a valid JWT token or token parameter is present.
+    Extracts active user_id ONLY if a valid JWT token, cookie, or token parameter is present.
     Returns None if unauthenticated.
     """
     auth_header = request.headers.get("Authorization")
@@ -89,6 +89,10 @@ def get_authenticated_user_id(request: Request) -> Optional[str]:
         token = auth_header.split(" ")[1]
     elif "token" in request.query_params:
         token = request.query_params["token"]
+    elif "session_token" in request.cookies:
+        token = request.cookies["session_token"]
+    elif "access_token" in request.cookies:
+        token = request.cookies["access_token"]
 
     if token:
         payload = decode_access_token(token)

@@ -371,6 +371,8 @@ def get_due_notifications(now: Optional[datetime] = None) -> List[dict]:
         for row in rows:
             r = dict(row)
             due_at = datetime.fromisoformat(r["due_at"])
+            if due_at.tzinfo is not None:
+                due_at = due_at.astimezone(timezone.utc).replace(tzinfo=None)
             offsets = json.loads(r["notify_offsets_minutes"])
             notified = json.loads(r["notified_offsets"])
 

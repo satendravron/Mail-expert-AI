@@ -183,6 +183,14 @@ def get_inbox(request: Request, importance: str | None = None):
     return db.get_all_emails(user_id, importance_filter=importance)
 
 
+@app.get("/api/emails")
+def get_emails_api_compat(request: Request):
+    """Compatibility endpoint for the Chrome extension content script."""
+    user_id = auth.get_current_user_id(request)
+    emails = db.get_all_emails(user_id)
+    return {"emails": emails}
+
+
 class CustomReminderRequest(BaseModel):
     title: str
     due_at: str
@@ -624,7 +632,7 @@ async def incoming_webhook_endpoint(req: IncomingWebhookPayload):
 
 
 @app.post("/api/auth/register", response_model=TokenResponse)
-def register_user_endpoint(req: UserRegisterRequest):
+def register_user_endpoint(req: UserRegisterRequest, response: Response):
     """Registers a new user account with PBKDF2 salted password hashing and returns JWT token."""
     if not req.email or "@" not in req.email:
         raise HTTPException(status_code=400, detail="Invalid email address format.")
@@ -638,6 +646,9 @@ def register_user_endpoint(req: UserRegisterRequest):
     user = db.create_user(email=req.email, password=req.password, full_name=req.full_name)
     token = auth.create_access_token({"user_id": user["id"], "email": user["email"]})
 
+    response.set_cookie(key="session_token", value=token, httponly=True, samesite="lax", max_age=604800)
+    response.set_cookie(key="access_token", value=token, httponly=True, samesite="lax", max_age=604800)
+
     return TokenResponse(
         access_token=token,
         token_type="bearer",
@@ -648,7 +659,7 @@ def register_user_endpoint(req: UserRegisterRequest):
 
 
 @app.post("/api/auth/login", response_model=TokenResponse)
-def login_user_endpoint(req: UserLoginRequest):
+def login_user_endpoint(req: UserLoginRequest, response: Response):
     """Authenticates user password and returns JWT token."""
     user = db.get_user_by_email(req.email)
     if not user:
@@ -659,6 +670,9 @@ def login_user_endpoint(req: UserLoginRequest):
 
     token = auth.create_access_token({"user_id": user["id"], "email": user["email"]})
 
+    response.set_cookie(key="session_token", value=token, httponly=True, samesite="lax", max_age=604800)
+    response.set_cookie(key="access_token", value=token, httponly=True, samesite="lax", max_age=604800)
+
     return TokenResponse(
         access_token=token,
         token_type="bearer",
@@ -666,6 +680,14 @@ def login_user_endpoint(req: UserLoginRequest):
         email=user["email"],
         full_name=user.get("full_name")
     )
+
+
+@app.post("/api/auth/logout")
+def logout_user_session_endpoint(response: Response):
+    """Clears access/session token cookies on user sign out."""
+    response.delete_cookie("session_token")
+    response.delete_cookie("access_token")
+    return {"status": "success", "message": "Logged out of user session successfully"}
 
 
 @app.get("/api/auth/me")
@@ -2253,8 +2275,13 @@ def dashboard(user_id: str = "local_user"):
           }}
         }}
 
-        function logoutUserSession() {{
+        async function logoutUserSession() {{
           localStorage.removeItem('auth_token');
+          try {{
+            await fetch('/api/auth/logout', {{ method: 'POST' }});
+          }} catch(e) {{
+            console.error('Logout error:', e);
+          }}
           currentAuthUser = null;
           showToast('Signed out of session');
           closeAuthModal();
